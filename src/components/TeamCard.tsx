@@ -18,6 +18,17 @@ export default function TeamCard({ team }: TeamCardProps) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string>(team.logo || '');
+
+  function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) setLogoPreview(URL.createObjectURL(file));
+  }
+
+  function handleEditClose() {
+    setShowEdit(false);
+    setLogoPreview(team.logo || '');
+  }
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -52,9 +63,9 @@ export default function TeamCard({ team }: TeamCardProps) {
       p.number,
       p.name,
       p.position,
-      p.soldPrice
+      p.soldPrice ?? 'FREE'
     ]);
-    
+
     autoTable(doc, {
       startY: 70,
       head: [['#', 'Player Name', 'Position', 'Price']],
@@ -63,7 +74,7 @@ export default function TeamCard({ team }: TeamCardProps) {
       headStyles: { fillColor: [22, 163, 74] },
       styles: { fontStyle: 'bold' }
     });
-    
+
     doc.save(`${team.name}_squad.pdf`);
   };
 
@@ -98,12 +109,12 @@ export default function TeamCard({ team }: TeamCardProps) {
       {/* Edit Modal */}
       <AnimatePresence>
         {showEdit && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-200 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setShowEdit(false)}
+              onClick={handleEditClose}
               className="absolute inset-0 bg-black/80 backdrop-blur-md"
             />
             <motion.div
@@ -115,7 +126,7 @@ export default function TeamCard({ team }: TeamCardProps) {
               <form action={handleEditSubmit} className="p-8 space-y-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-black uppercase italic tracking-tighter">Edit Team</h3>
-                  <button type="button" onClick={() => setShowEdit(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                  <button type="button" onClick={handleEditClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
@@ -153,12 +164,19 @@ export default function TeamCard({ team }: TeamCardProps) {
 
                 <div>
                   <label className="block text-[10px] font-black uppercase text-blue-500 mb-1">Update Logo</label>
+                  {logoPreview && (
+                    <div className="mb-2 rounded-xl overflow-hidden border border-white/10 h-24 w-24 bg-white/5 flex items-center justify-center">
+                      <img src={logoPreview} alt="Current logo" className="w-full h-full object-contain p-2" />
+                    </div>
+                  )}
                   <input
                     type="file"
                     name="logo"
                     accept="image/*"
+                    onChange={handleLogoChange}
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs font-bold file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-blue-600 file:text-white"
                   />
+                  <p className="text-[9px] text-white/30 mt-1 uppercase tracking-wide">Leave empty to keep current logo</p>
                 </div>
 
                 <button
@@ -176,7 +194,7 @@ export default function TeamCard({ team }: TeamCardProps) {
 
       <div 
         onClick={() => setShowDetails(true)}
-        className={`glass rounded-[2rem] overflow-hidden card-hover border-t-4 border-t-green-500 group relative cursor-pointer ${isDeleting ? 'opacity-50 grayscale' : ''}`}
+        className={`glass rounded-4xl overflow-hidden card-hover border-t-4 border-t-green-500 group relative cursor-pointer ${isDeleting ? 'opacity-50 grayscale' : ''}`}
       >
         <div className="p-6 bg-white/5 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -221,7 +239,7 @@ export default function TeamCard({ team }: TeamCardProps) {
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-3">
               <span className="text-xs text-muted-foreground flex items-center gap-1 font-bold">
-                <Users className="w-3 h-3 text-green-500" /> {team.players.length}/9 Players
+                <Users className="w-3 h-3 text-green-500" /> {team.players.length}/10 Players
               </span>
             </div>
             <span className="text-sm text-green-400 flex items-center gap-1 font-black">
@@ -232,7 +250,7 @@ export default function TeamCard({ team }: TeamCardProps) {
           <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
             <div 
               className="h-full bg-green-600 rounded-full transition-all duration-1000" 
-              style={{ width: `${(team.players.length / 9) * 100}%` }}
+              style={{ width: `${(team.players.length / 10) * 100}%` }}
             />
           </div>
           
@@ -245,7 +263,7 @@ export default function TeamCard({ team }: TeamCardProps) {
       {/* Details Modal */}
       <AnimatePresence>
         {showDetails && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -286,7 +304,7 @@ export default function TeamCard({ team }: TeamCardProps) {
                   </div>
                 </div>
 
-                <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4 px-2">Signed Players ({team.players.length})</h3>
+                <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4 px-2">Signed Players ({team.players.length}/10)</h3>
                 <div className="space-y-3">
                   {team.players.map((player: any) => (
                     <div key={player._id} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-green-500/20 transition-colors">
@@ -300,7 +318,9 @@ export default function TeamCard({ team }: TeamCardProps) {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-black text-white leading-none italic">{player.soldPrice}</p>
+                        <p className="text-lg font-black leading-none italic" style={{ color: player.soldPrice === 0 ? '#fbbf24' : 'white' }}>
+                          {player.soldPrice === 0 ? 'FREE' : player.soldPrice}
+                        </p>
                         <p className="text-[8px] text-muted-foreground uppercase font-black mt-1">Points</p>
                       </div>
                     </div>

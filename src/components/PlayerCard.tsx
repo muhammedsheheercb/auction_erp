@@ -115,7 +115,7 @@ export default function PlayerCard({ player }: PlayerCardProps) {
                     <select
                       name="position"
                       defaultValue={player.position}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all text-xs font-bold"
+                      className="input-base select-dark text-xs"
                     >
                       <option value="Goalkeeper">Goalkeeper</option>
                       <option value="Defender">Defender</option>

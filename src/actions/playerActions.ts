@@ -28,7 +28,7 @@ export async function createPlayer(_prevState: { success?: boolean; error?: stri
       position,
       number,
       status: 'available',
-      basePrice: 500,
+      basePrice: position === 'Goalkeeper' ? 0 : 500,
     });
 
     await player.save();

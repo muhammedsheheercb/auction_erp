@@ -4,18 +4,112 @@ import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { sellPlayer } from '@/actions/teamActions';
 import { updatePlayerStatus } from '@/actions/playerActions';
-import { Search, Trophy, Users, Wallet, X, Gavel, Ban, RefreshCcw, Plus, Minus } from 'lucide-react';
+import { Search, Trophy, Users, Wallet, Ban, RefreshCcw, Plus, Minus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ConfirmModal from './ConfirmModal';
 
+/* ── Position-specific signing config ──────────────────────── */
+type Position = 'Goalkeeper' | 'Defender' | 'Midfielder' | 'Forward';
+
+const SIGN_CONFIG: Record<Position, {
+  headline: string;
+  sub: string;
+  emoji: string;
+  bgFrom: string;
+  bgTo: string;
+  border: string;
+  glow: string;
+  textColor: string;
+  animClass: string;
+  particles: string[];
+}> = {
+  Goalkeeper: {
+    headline: 'SIGNED!',
+    sub: 'Between the Sticks',
+    emoji: '🧤',
+    bgFrom: 'from-amber-950/90',
+    bgTo: 'to-yellow-900/60',
+    border: 'border-yellow-400/60',
+    glow: 'shadow-yellow-500/50',
+    textColor: 'text-yellow-400',
+    animClass: 'anim-gk',
+    particles: ['🧤', '✋', '🟡', '⭐'],
+  },
+  Defender: {
+    headline: 'SIGNED!',
+    sub: 'Wall of Steel',
+    emoji: '🛡️',
+    bgFrom: 'from-blue-950/90',
+    bgTo: 'to-blue-900/60',
+    border: 'border-blue-400/60',
+    glow: 'shadow-blue-500/50',
+    textColor: 'text-blue-400',
+    animClass: 'anim-def',
+    particles: ['🛡️', '🔵', '💪', '🏰'],
+  },
+  Midfielder: {
+    headline: 'SIGNED!',
+    sub: 'Engine Room',
+    emoji: '⚡',
+    bgFrom: 'from-purple-950/90',
+    bgTo: 'to-violet-900/60',
+    border: 'border-purple-400/60',
+    glow: 'shadow-purple-500/50',
+    textColor: 'text-purple-400',
+    animClass: 'anim-mid',
+    particles: ['⚡', '🟣', '🌀', '✨'],
+  },
+  Forward: {
+    headline: 'GOAL!!!',
+    sub: 'Net Buster',
+    emoji: '🔥',
+    bgFrom: 'from-red-950/90',
+    bgTo: 'to-orange-900/60',
+    border: 'border-red-400/60',
+    glow: 'shadow-red-500/50',
+    textColor: 'text-red-400',
+    animClass: 'anim-fwd',
+    particles: ['🔥', '⚽', '🎯', '💥', '🏆'],
+  },
+};
+
+/* ── Particle component ─────────────────────────────────────── */
+function Particle({ emoji, index }: { emoji: string; index: number }) {
+  const angle = (index / 5) * 360 + Math.random() * 40;
+  const dist  = 160 + Math.random() * 120;
+  const x = Math.cos((angle * Math.PI) / 180) * dist;
+  const y = Math.sin((angle * Math.PI) / 180) * dist;
+
+  return (
+    <motion.div
+      className="absolute text-3xl pointer-events-none select-none"
+      style={{ top: '50%', left: '50%' }}
+      initial={{ x: 0, y: 0, scale: 0, opacity: 1 }}
+      animate={{ x, y, scale: [0, 1.4, 0.8], opacity: [1, 1, 0] }}
+      transition={{ duration: 1.2, delay: 0.25 + index * 0.06, ease: 'easeOut' }}
+    >
+      {emoji}
+    </motion.div>
+  );
+}
+
+/* ── Main component ─────────────────────────────────────────── */
 export default function AuctionInterface({ players, teams }: { players: any[], teams: any[] }) {
   const [searchNumber, setSearchNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showGoal, setShowGoal] = useState(false);
+  const [signedInfo, setSignedInfo] = useState<{
+    name: string;
+    number: number;
+    position: Position;
+    playerPhoto: string;
+    teamName: string;
+    teamLogo: string;
+    price: number;
+  } | null>(null);
   const [showBidConfirm, setShowBidConfirm] = useState(false);
   const [showUnsoldConfirm, setShowUnsoldConfirm] = useState(false);
-  const [pendingBid, setPendingBid] = useState<{ team: any, price: number } | null>(null);
+  const [pendingBid, setPendingBid] = useState<{ team: any; price: number } | null>(null);
   const [currentBid, setCurrentBid] = useState(500);
 
   const selectedPlayer = useMemo(() => {
@@ -24,20 +118,30 @@ export default function AuctionInterface({ players, teams }: { players: any[], t
   }, [searchNumber, players]);
 
   useEffect(() => {
-    if (selectedPlayer && selectedPlayer.status === 'available') {
-      setCurrentBid(500);
+    if (selectedPlayer?.status === 'available') {
+      setCurrentBid(selectedPlayer.position === 'Goalkeeper' ? 0 : 500);
     }
   }, [selectedPlayer?._id]);
 
+  const isGK = selectedPlayer?.position === 'Goalkeeper';
+
+  // Max a team can bid on a PAID player.
+  // GK is free, so GK signings must NOT reduce the mandatory-slot reserve —
+  // only non-GK (paid) players count toward the 8-player minimum.
   const calculateMaxBid = (team: any) => {
-    const slotsRemaining = 9 - team.players.length;
-    if (slotsRemaining === 0) return 0;
-    return team.remainingBudget - ((slotsRemaining - 1) * 500);
+    const slots = 10 - team.players.length;
+    if (slots === 0) return 0;
+    const paidCount = team.players.filter((p: any) => p.position !== 'Goalkeeper').length;
+    const afterPaidBuy = paidCount + 1;          // +1 for the paid player being signed now
+    const stillRequired = Math.max(0, 8 - afterPaidBuy);
+    return team.remainingBudget - stillRequired * 500;
   };
 
   const handleSellClick = (team: any) => {
     if (!selectedPlayer) return;
-    setPendingBid({ team, price: currentBid });
+    // Goalkeepers are always free regardless of the stepper value
+    const price = selectedPlayer.position === 'Goalkeeper' ? 0 : currentBid;
+    setPendingBid({ team, price });
     setShowBidConfirm(true);
   };
 
@@ -73,17 +177,24 @@ export default function AuctionInterface({ players, teams }: { players: any[], t
 
   const executeSale = async () => {
     if (!selectedPlayer || !pendingBid) return;
-
     setLoading(true);
     setError(null);
     try {
       const res = await sellPlayer(selectedPlayer._id, pendingBid.team._id, pendingBid.price);
       if (res.success) {
-        setShowGoal(true);
+        setSignedInfo({
+          name: selectedPlayer.name,
+          number: selectedPlayer.number,
+          position: selectedPlayer.position as Position,
+          playerPhoto: selectedPlayer.photo,
+          teamName: pendingBid.team.name,
+          teamLogo: pendingBid.team.logo || '',
+          price: pendingBid.price,
+        });
         setTimeout(() => {
-          setShowGoal(false);
+          setSignedInfo(null);
           setSearchNumber('');
-        }, 3000);
+        }, 3200);
       }
     } catch (err: any) {
       setError(err.message);
@@ -92,6 +203,8 @@ export default function AuctionInterface({ players, teams }: { players: any[], t
       setPendingBid(null);
     }
   };
+
+  const cfg = signedInfo ? (SIGN_CONFIG[signedInfo.position] ?? SIGN_CONFIG.Forward) : null;
 
   return (
     <div className="space-y-6 md:space-y-10 relative">
@@ -104,7 +217,6 @@ export default function AuctionInterface({ players, teams }: { players: any[], t
         confirmText="Confirm Deal"
         cancelText="Cancel"
       />
-
       <ConfirmModal
         isOpen={showUnsoldConfirm}
         onClose={() => setShowUnsoldConfirm(false)}
@@ -115,86 +227,192 @@ export default function AuctionInterface({ players, teams }: { players: any[], t
         cancelText="Decline"
       />
 
+      {/* ── Position-specific signing overlay ── */}
       <AnimatePresence>
-        {showGoal && (
+        {signedInfo && cfg && (
           <motion.div
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: [0.5, 1.2, 1], opacity: 1 }}
-            exit={{ scale: 2, opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none bg-black/60 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.6 } }}
+            className="fixed inset-0 z-100 flex items-center justify-center pointer-events-none bg-black/75 backdrop-blur-md"
           >
-            <div className="text-center">
-              <motion.div 
-                animate={{ rotate: [0, -5, 5, -5, 0] }}
-                transition={{ repeat: Infinity, duration: 0.5 }}
-                className="bg-green-600 text-black font-black text-6xl md:text-9xl px-12 md:px-20 py-6 md:py-10 rounded-full shadow-[0_0_100px_rgba(34,197,94,0.6)] border-8 border-white mb-4"
-              >
-                GOAL!!!
-              </motion.div>
-              <div className="text-white font-black text-2xl md:text-4xl uppercase italic tracking-tighter drop-shadow-lg">
-                Player Signed!
+            <div className="relative flex flex-col items-center">
+              {/* Particles */}
+              {cfg.particles.map((emoji, i) => (
+                <Particle key={i} emoji={emoji} index={i} />
+              ))}
+
+              {/* Main card */}
+              <div className={`${cfg.animClass} relative bg-linear-to-br ${cfg.bgFrom} ${cfg.bgTo} border-2 ${cfg.border} rounded-[2.5rem] overflow-hidden shadow-2xl ${cfg.glow} w-85 md:w-100`}>
+
+                {/* Player photo strip */}
+                <div className="relative h-48 w-full overflow-hidden">
+                  <img
+                    src={signedInfo.playerPhoto}
+                    alt={signedInfo.name}
+                    className="w-full h-full object-cover object-top"
+                  />
+                  {/* gradient overlay */}
+                  <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
+
+                  {/* position emoji top-left */}
+                  <motion.span
+                    initial={{ scale: 0, rotate: -30 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ delay: 0.3, type: 'spring', stiffness: 260 }}
+                    className="absolute top-3 left-3 text-4xl drop-shadow-lg select-none"
+                  >
+                    {cfg.emoji}
+                  </motion.span>
+
+                  {/* price badge top-right */}
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                      signedInfo.price === 0
+                        ? 'bg-amber-500 text-black'
+                        : 'bg-white/20 backdrop-blur-sm text-white border border-white/30'
+                    }`}
+                  >
+                    {signedInfo.price === 0 ? 'FREE 🧤' : `${signedInfo.price} pts`}
+                  </motion.div>
+
+                  {/* player name on photo */}
+                  <div className="absolute bottom-3 left-4 right-4">
+                    <motion.h2
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.45 }}
+                      className="text-2xl font-black uppercase italic tracking-tighter leading-none text-white drop-shadow-lg"
+                    >
+                      {signedInfo.name}
+                    </motion.h2>
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.55 }}
+                      className={`text-[10px] font-black uppercase tracking-widest mt-0.5 ${cfg.textColor}`}
+                    >
+                      #{signedInfo.number} · {signedInfo.position}
+                    </motion.p>
+                  </div>
+                </div>
+
+                {/* Headline + team section */}
+                <div className="px-7 pt-5 pb-6 text-center">
+                  {/* SIGNED / GOAL headline */}
+                  <motion.h1
+                    initial={{ opacity: 0, scale: 0.6 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.35, type: 'spring', stiffness: 220 }}
+                    className={`text-5xl md:text-6xl font-black italic tracking-tighter leading-none ${cfg.textColor} mb-1`}
+                  >
+                    {cfg.headline}
+                  </motion.h1>
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="text-[10px] font-black text-white/40 uppercase tracking-[0.25em] mb-5"
+                  >
+                    {cfg.sub}
+                  </motion.p>
+
+                  {/* Team banner */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.65 }}
+                    className="flex items-center gap-4 bg-white/10 backdrop-blur-sm border border-white/15 rounded-2xl px-4 py-3"
+                  >
+                    {/* Team logo */}
+                    <div className="w-14 h-14 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0 overflow-hidden">
+                      {signedInfo.teamLogo ? (
+                        <img
+                          src={signedInfo.teamLogo}
+                          alt={signedInfo.teamName}
+                          className="w-full h-full object-contain p-1"
+                        />
+                      ) : (
+                        <span className="text-2xl">🏆</span>
+                      )}
+                    </div>
+                    <div className="text-left min-w-0">
+                      <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">Signed to</p>
+                      <p className="text-lg font-black uppercase tracking-tighter leading-tight text-white truncate">
+                        {signedInfo.teamName}
+                      </p>
+                    </div>
+                  </motion.div>
+                </div>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Search Section */}
+      {/* ── Search ── */}
       <div className="max-w-lg mx-auto px-4">
         <div className="relative group">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-green-500 w-6 h-6 group-focus-within:scale-110 transition-transform" />
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-green-500 w-5 h-5 transition-transform group-focus-within:scale-110" />
           <input
             type="number"
-            placeholder="ENTER SCOUT NUMBER (1-66)"
+            placeholder="Enter scout number  (1 – 66)"
             value={searchNumber}
             onChange={(e) => {
-              const val = e.target.value;
-              if (val === '') {
-                setSearchNumber('');
-                return;
-              }
-              const num = parseInt(val);
-              if (!isNaN(num)) {
-                setSearchNumber(Math.max(1, Math.min(66, num)).toString());
-              }
+              const v = e.target.value;
+              if (v === '') { setSearchNumber(''); return; }
+              const n = parseInt(v);
+              if (!isNaN(n)) setSearchNumber(Math.max(1, Math.min(66, n)).toString());
             }}
-            className="w-full bg-white/5 border-2 border-white/10 rounded-2xl pl-14 pr-4 py-5 focus:outline-none focus:border-green-500 transition-all text-2xl font-black uppercase tracking-widest placeholder:text-white/20"
+            className="w-full bg-white/5 border-2 border-white/10 rounded-2xl pl-14 pr-4 py-5 focus:outline-none focus:border-green-500 focus:shadow-[0_0_0_3px_rgba(34,197,94,0.15)] transition-all text-2xl font-black uppercase tracking-widest placeholder:text-white/20"
           />
         </div>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8 md:gap-12 px-2 md:px-4">
-        {/* Selected Player Card */}
-        <div className="w-full lg:w-[400px] shrink-0">
+        {/* ── Player card ── */}
+        <div className="w-full lg:w-100 shrink-0">
           <AnimatePresence mode="wait">
             {selectedPlayer ? (
               <motion.div
                 key={selectedPlayer._id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="glass rounded-[2.5rem] overflow-hidden border-2 border-green-500/50 shadow-2xl shadow-green-500/10"
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.3 }}
+                className="glass rounded-[2.5rem] overflow-hidden border border-green-500/30 shadow-2xl shadow-green-950/60"
               >
-                <div className="relative h-[300px] md:h-[450px] w-full">
+                <div className="relative h-75 md:h-110 w-full">
                   <img src={selectedPlayer.photo} alt={selectedPlayer.name} className="w-full h-full object-cover" />
-                  <div className={`absolute inset-0 bg-gradient-to-t from-[#050a05] via-[#050a05]/20 to-transparent ${selectedPlayer.status === 'sold' ? 'bg-red-900/40 backdrop-grayscale' : selectedPlayer.status === 'unsold' ? 'bg-gray-900/60 backdrop-blur-sm' : ''}`} />
-                  
-                  {/* Status Overlay for Sold/Unsold */}
+                  <div className={`absolute inset-0 bg-linear-to-t from-[#060b06] via-[#060b06]/10 to-transparent ${
+                    selectedPlayer.status === 'sold'   ? 'mix-blend-normal' :
+                    selectedPlayer.status === 'unsold' ? 'backdrop-grayscale' : ''
+                  }`} />
+
                   {selectedPlayer.status !== 'available' && (
-                    <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
-                      <div className={`p-8 rounded-[2rem] border-2 shadow-2xl ${selectedPlayer.status === 'sold' ? 'bg-green-600/20 border-green-500 shadow-green-500/20' : 'bg-red-600/20 border-red-500 shadow-red-500/20'}`}>
-                        <h4 className={`text-5xl font-black uppercase italic tracking-tighter mb-2 ${selectedPlayer.status === 'sold' ? 'text-green-500' : 'text-red-500'}`}>
+                    <div className="absolute inset-0 flex items-center justify-center p-6">
+                      <div className={`text-center p-8 rounded-4xl border-2 backdrop-blur-sm ${
+                        selectedPlayer.status === 'sold'
+                          ? 'bg-green-950/70 border-green-500/60 shadow-xl shadow-green-500/20'
+                          : 'bg-red-950/70 border-red-500/60 shadow-xl shadow-red-500/20'
+                      }`}>
+                        <h4 className={`text-5xl font-black uppercase italic tracking-tighter mb-2 ${
+                          selectedPlayer.status === 'sold' ? 'text-green-400' : 'text-red-400'
+                        }`}>
                           {selectedPlayer.status === 'sold' ? 'SIGNED' : 'UNSOLD'}
                         </h4>
                         {selectedPlayer.status === 'sold' && (
-                          <p className="text-xl font-bold uppercase tracking-tight text-white">
-                            TO {teams.find(t => t._id === selectedPlayer.team)?.name}
+                          <p className="text-base font-bold uppercase tracking-tight text-white/80">
+                            to {teams.find(t => t._id === selectedPlayer.team)?.name}
                           </p>
                         )}
                         {selectedPlayer.status === 'unsold' && (
-                          <button 
+                          <button
                             onClick={handleRecall}
-                            className="mt-4 flex items-center gap-2 bg-white text-black px-6 py-2 rounded-full font-black uppercase text-xs hover:bg-green-500 transition-colors mx-auto"
+                            className="mt-4 flex items-center gap-2 bg-white text-black px-6 py-2 rounded-full font-black uppercase text-xs hover:bg-green-400 transition-colors mx-auto"
                           >
                             <RefreshCcw className="w-4 h-4" /> Recall to Auction
                           </button>
@@ -203,67 +421,76 @@ export default function AuctionInterface({ players, teams }: { players: any[], t
                     </div>
                   )}
 
-                  <div className="absolute bottom-8 left-8 right-8">
-                    <div className="bg-green-600 text-black text-[10px] font-black px-4 py-1.5 rounded-full mb-3 w-fit uppercase tracking-widest">
+                  <div className="absolute bottom-6 left-6 right-6">
+                    <div className="inline-flex items-center gap-2 bg-green-600 text-black text-[10px] font-black px-3 py-1 rounded-full mb-2 uppercase tracking-widest">
                       PROSPECT #{selectedPlayer.number}
                     </div>
-                    <h2 className="text-4xl md:text-5xl font-black uppercase italic tracking-tighter leading-none mb-1">{selectedPlayer.name}</h2>
-                    <div className="flex items-center gap-2">
-                      <span className="text-green-400 font-black uppercase text-sm tracking-widest">{selectedPlayer.position}</span>
-                    </div>
+                    <h2 className="text-3xl md:text-4xl font-black uppercase italic tracking-tighter leading-none mb-1 drop-shadow-lg">
+                      {selectedPlayer.name}
+                    </h2>
+                    <span className={`inline-block text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${
+                      selectedPlayer.position === 'Goalkeeper' ? 'badge-gk' :
+                      selectedPlayer.position === 'Defender'   ? 'badge-def' :
+                      selectedPlayer.position === 'Midfielder' ? 'badge-mid' : 'badge-fwd'
+                    }`}>
+                      {selectedPlayer.position}
+                    </span>
                   </div>
                 </div>
 
-                <div className="p-6 bg-white/5 space-y-4">
+                <div className="p-5 bg-white/3 space-y-4">
                   {selectedPlayer.status === 'available' ? (
                     <>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Current Bidding</span>
-                        <div className="flex items-center gap-4">
-                          <button 
+                      {isGK && (
+                        <div className="flex items-center justify-center gap-2 bg-amber-500/10 border border-amber-500/25 rounded-xl py-2 px-3">
+                          <span className="text-base">🧤</span>
+                          <span className="text-amber-400 font-black text-[10px] uppercase tracking-widest">Free Signing — Goalkeeper</span>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between bg-white/4 rounded-xl p-3">
+                        <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">
+                          {isGK ? 'Price' : 'Current Bid'}
+                        </span>
+                        <div className="flex items-center gap-3">
+                          <button
+                            disabled={isGK}
                             onClick={() => {
-                              let decrement = 100;
-                              if (currentBid > 2000) decrement = 500;
-                              else if (currentBid > 1000) decrement = 200;
-                              setCurrentBid(prev => Math.max(500, prev - decrement));
+                              const dec = currentBid > 2000 ? 500 : currentBid > 1000 ? 200 : 100;
+                              setCurrentBid(p => Math.max(500, p - dec));
                             }}
-                            className="p-2 bg-white/5 hover:bg-red-500/20 rounded-lg transition-colors border border-white/10"
+                            className="w-8 h-8 flex items-center justify-center bg-white/5 hover:bg-red-500/20 disabled:opacity-20 disabled:cursor-not-allowed rounded-lg border border-white/10 transition-colors"
                           >
-                            <Minus className="w-4 h-4" />
+                            <Minus className="w-3.5 h-3.5" />
                           </button>
-                          
-                          <div className="text-4xl font-black text-white italic w-32 text-center select-none">
-                            {currentBid}
-                          </div>
-
-                          <button 
+                          <span className={`text-3xl font-black italic w-24 text-center tabular-nums select-none ${isGK ? 'text-amber-400' : ''}`}>
+                            {isGK ? 'FREE' : currentBid}
+                          </span>
+                          <button
+                            disabled={isGK}
                             onClick={() => {
-                              let increment = 100;
-                              if (currentBid >= 2000) increment = 500;
-                              else if (currentBid >= 1000) increment = 200;
-                              
-                              const absoluteMax = Math.max(...teams.map(t => calculateMaxBid(t)));
-                              setCurrentBid(prev => Math.min(prev + increment, absoluteMax));
+                              const inc = currentBid >= 2000 ? 500 : currentBid >= 1000 ? 200 : 100;
+                              const max = Math.max(...teams.map(calculateMaxBid));
+                              setCurrentBid(p => Math.min(p + inc, max));
                             }}
-                            className="p-2 bg-white/5 hover:bg-green-500/20 rounded-lg transition-colors border border-white/10"
+                            className="w-8 h-8 flex items-center justify-center bg-white/5 hover:bg-green-500/20 disabled:opacity-20 disabled:cursor-not-allowed rounded-lg border border-white/10 transition-colors"
                           >
-                            <Plus className="w-4 h-4" />
+                            <Plus className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </div>
-                      <button 
+                      <button
                         onClick={handleMarkUnsoldClick}
-                        className="w-full py-3 border-2 border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white rounded-xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2"
+                        className="w-full py-3 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white hover:border-red-500 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2"
                       >
-                        <Ban className="w-4 h-4" /> No Bidders - Mark Unsold
+                        <Ban className="w-3.5 h-3.5" /> No Bidders — Mark Unsold
                       </button>
                     </>
                   ) : (
                     <div className="flex justify-between items-center py-2 border-t border-white/5">
-                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                      <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">
                         {selectedPlayer.status === 'sold' ? 'Final Fee' : 'Status'}
                       </span>
-                      <span className="text-2xl font-black italic text-white">
+                      <span className="text-2xl font-black italic">
                         {selectedPlayer.status === 'sold' ? selectedPlayer.soldPrice : 'UNSOLD'}
                       </span>
                     </div>
@@ -271,99 +498,115 @@ export default function AuctionInterface({ players, teams }: { players: any[], t
                 </div>
               </motion.div>
             ) : (
-              <div className="glass rounded-[2.5rem] h-[300px] md:h-[550px] flex flex-col items-center justify-center text-muted-foreground border-dashed border-2 border-white/10 p-8 text-center">
-                <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6">
-                  <Users className="w-10 h-10 opacity-20 text-green-500" />
+              <div className="glass rounded-[2.5rem] h-75 md:h-135 flex flex-col items-center justify-center text-white/30 border border-dashed border-white/10 p-8 text-center">
+                <div className="w-16 h-16 bg-white/4 rounded-full flex items-center justify-center mb-5">
+                  <Users className="w-8 h-8 text-green-500/30" />
                 </div>
-                <h3 className="text-lg font-black uppercase tracking-widest mb-2 text-white/40">No Prospect Selected</h3>
-                <p className="text-sm font-medium">Enter a scout number above to view details and open bidding.</p>
+                <h3 className="text-base font-black uppercase tracking-widest mb-2">No Prospect Selected</h3>
+                <p className="text-sm font-medium text-white/25">Enter a scout number above to open bidding.</p>
               </div>
             )}
           </AnimatePresence>
-          {error && <p className="mt-4 text-red-500 text-center bg-red-500/10 py-3 rounded-2xl text-xs font-black uppercase tracking-widest">{error}</p>}
+          {error && (
+            <p className="mt-4 text-red-400 text-center bg-red-500/10 border border-red-500/20 py-3 rounded-2xl text-xs font-black uppercase tracking-widest">
+              {error}
+            </p>
+          )}
         </div>
 
-        {/* Teams Grid */}
+        {/* ── Teams grid ── */}
         <div className="flex-1">
-          <div className="flex items-center justify-between mb-6 px-2">
-            <h2 className="text-xl font-black uppercase tracking-tighter">Active Bidders</h2>
-            <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-              Live Budget Tracking
-            </div>
+          <div className="flex items-center justify-between mb-6 px-1">
+            <h2 className="text-lg font-black uppercase tracking-tighter">Active Bidders</h2>
+            <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">Live Budget Tracking</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {teams
               .filter(team => {
                 if (!selectedPlayer || selectedPlayer.status !== 'available') return true;
+                // GK is free — only need a free slot
+                if (isGK) return team.players.length < 10;
                 return calculateMaxBid(team) >= currentBid;
               })
               .map((team) => {
-                const maxBid = calculateMaxBid(team);
-                const isFull = team.players.length >= 9;
-                const isPlayerSold = selectedPlayer?.status === 'sold';
-                
-                return (
-                  <div key={team._id} className={`glass p-6 rounded-[2rem] border-2 transition-all ${isFull || isPlayerSold ? 'opacity-40 grayscale pointer-events-none' : 'hover:border-green-500 border-white/5'}`}>
-                  <div className="flex flex-col gap-4 mb-6">
-                    <div className="flex justify-between items-start">
-                      <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 shrink-0">
-                        {team.logo ? (
-                          <img src={team.logo} className="w-8 h-8 object-contain" alt="" />
-                        ) : (
-                          <Trophy className="w-6 h-6 text-green-500/50" />
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-black text-green-400 flex items-center justify-end gap-1 leading-none">
-                          <Wallet className="w-4 h-4" />
-                          {team.remainingBudget}
-                        </div>
-                        <div className="text-[10px] font-black text-muted-foreground uppercase mt-1 tracking-widest">Available</div>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-lg font-black uppercase tracking-tighter leading-tight truncate">
-                        {team.name}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="flex -space-x-2">
-                          {[...Array(9)].map((_, i) => (
-                            <div key={i} className={`w-3 h-3 rounded-full border border-[#050a05] ${i < team.players.length ? 'bg-green-500' : 'bg-white/10'}`} />
-                          ))}
-                        </div>
-                        <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
-                          {team.players.length}/9
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white/5 rounded-xl p-3 mb-4 flex justify-between items-center">
-                    <span className="text-[9px] font-black text-muted-foreground uppercase">Bid Limit</span>
-                    <span className="text-xs font-black text-yellow-500 uppercase italic">{maxBid}</span>
-                  </div>
+                const maxBid   = calculateMaxBid(team);
+                const isFull   = team.players.length >= 10;
+                const isSold   = selectedPlayer?.status === 'sold';
+                // GK is always affordable (free) as long as there's a slot
+                const canBid   = selectedPlayer && !isFull && !isSold && (isGK || maxBid >= currentBid);
 
-                  <button
-                    onClick={() => handleSellClick(team)}
-                    disabled={!selectedPlayer || loading || isFull || maxBid < 500 || isPlayerSold}
-                    className={`w-full py-4 rounded-2xl font-black transition-all uppercase tracking-[0.2em] text-[10px] ${
-                      selectedPlayer && !isFull && maxBid >= 500 && !isPlayerSold
-                        ? 'bg-green-600 hover:bg-green-700 text-black shadow-lg shadow-green-500/30'
-                        : 'bg-white/10 text-muted-foreground'
+                return (
+                  <div
+                    key={team._id}
+                    className={`glass p-5 rounded-[1.75rem] border transition-all duration-200 ${
+                      isFull || isSold
+                        ? 'opacity-40 grayscale pointer-events-none border-white/5'
+                        : 'hover:border-green-500/40 border-white/6'
                     }`}
                   >
-                    {isFull ? 'Squad Full' : isPlayerSold ? 'Signed' : 'Place Bid'}
-                  </button>
-                </div>
-              );
-            })}
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                        {team.logo
+                          ? <img src={team.logo} className="w-7 h-7 object-contain" alt="" />
+                          : <Trophy className="w-5 h-5 text-green-500/40" />
+                        }
+                      </div>
+                      <div className="text-right">
+                        <div className="text-base font-black text-green-400 flex items-center justify-end gap-1 leading-none">
+                          <Wallet className="w-3.5 h-3.5" />{team.remainingBudget}
+                        </div>
+                        <div className="text-[9px] font-black text-white/30 uppercase mt-0.5 tracking-widest">budget</div>
+                      </div>
+                    </div>
+
+                    <h3 className="text-base font-black uppercase tracking-tighter leading-tight truncate mb-1">
+                      {team.name}
+                    </h3>
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="flex gap-0.5">
+                        {[...Array(10)].map((_, i) => (
+                          <div key={i} className={`w-2 h-2 rounded-full ${i < team.players.length ? 'bg-green-500' : 'bg-white/10'}`} />
+                        ))}
+                      </div>
+                      <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">
+                        {team.players.length}/10
+                      </span>
+                    </div>
+
+                    <div className="bg-white/4 rounded-lg px-3 py-2 flex justify-between items-center mb-3">
+                      <span className="text-[9px] font-black text-white/30 uppercase tracking-wide">
+                        {isGK ? 'GK Signing' : 'Max bid'}
+                      </span>
+                      <span className={`text-xs font-black italic ${isGK ? 'text-amber-400' : 'text-yellow-400'}`}>
+                        {isGK ? 'FREE 🧤' : maxBid}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => handleSellClick(team)}
+                      disabled={!canBid || loading}
+                      className={`w-full py-3.5 rounded-xl font-black transition-all uppercase tracking-[0.15em] text-[10px] active:scale-[0.97] ${
+                        canBid
+                          ? isGK
+                            ? 'bg-amber-500 hover:bg-amber-400 text-black shadow-lg shadow-amber-900/40'
+                            : 'bg-green-600 hover:bg-green-500 text-black shadow-lg shadow-green-900/40'
+                          : 'bg-white/6 text-white/25 cursor-not-allowed'
+                      }`}
+                    >
+                      {isFull ? 'Squad Full' : isSold ? 'Already Signed' : isGK ? '🧤 Sign Free' : 'Place Bid'}
+                    </button>
+                  </div>
+                );
+              })}
           </div>
+
           {teams.length === 0 && (
-            <div className="glass rounded-[2rem] p-20 text-center border-dashed border-2 border-white/10">
-              <Trophy className="w-16 h-16 mx-auto mb-4 opacity-10" />
-              <p className="text-muted-foreground font-black uppercase tracking-widest">No Teams Registered</p>
-              <Link href="/teams" className="text-green-500 text-xs font-black uppercase mt-4 inline-block hover:underline">Go to Team Center</Link>
+            <div className="glass rounded-4xl p-16 text-center border border-dashed border-white/10">
+              <Trophy className="w-12 h-12 mx-auto mb-4 opacity-10" />
+              <p className="text-white/30 font-black uppercase tracking-widest text-sm">No Teams Registered</p>
+              <Link href="/teams" className="text-green-500 text-xs font-black uppercase mt-3 inline-block hover:text-green-400 transition-colors">
+                Go to Team Center →
+              </Link>
             </div>
           )}
         </div>

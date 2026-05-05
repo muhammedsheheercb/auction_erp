@@ -15,7 +15,7 @@ const PlayerSchema: Schema = new Schema({
   name: { type: String, required: true },
   photo: { type: String, required: true },
   position: { type: String, enum: ['Goalkeeper', 'Defender', 'Midfielder', 'Forward'], required: true },
-  number: { type: Number, required: true, unique: true, min: 1, max: 66 },
+  number: { type: Number, required: true, unique: true, min: 1, max: 80 },
   basePrice: { type: Number, default: 500 },
   soldPrice: { type: Number },
   team: { type: Schema.Types.ObjectId, ref: 'Team' },

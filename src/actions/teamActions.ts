@@ -98,20 +98,38 @@ export async function getTeams() {
 
 export async function sellPlayer(playerId: string, teamId: string, price: number) {
   await connectDB();
-  
+
   const team = await Team.findById(teamId);
   const player = await Player.findById(playerId);
 
   if (!team || !player) throw new Error('Team or Player not found');
   if (player.status !== 'available') throw new Error('Player already sold');
-  if (team.remainingBudget < price) throw new Error('Insufficient budget');
+  if (team.players.length >= 10) throw new Error('Squad is full (10 players max)');
 
-  // Logic check: Can team afford this player and still have 500 for each remaining slot?
-  const slotsRemaining = 9 - team.players.length;
-  const minimumReserved = (slotsRemaining - 1) * 500;
-  
-  if (team.remainingBudget - price < minimumReserved) {
-    throw new Error(`Cannot bid more than ${team.remainingBudget - minimumReserved}. Must save 500 for each remaining slot.`);
+  const isGoalkeeper = player.position === 'Goalkeeper';
+
+  // Paid signings: check budget and minimum-reserve rule.
+  // GK is free and does NOT count toward the mandatory 8-player minimum —
+  // only non-GK (paid) players reduce the reserve obligation.
+  if (price > 0) {
+    if (team.remainingBudget < price) throw new Error('Insufficient budget');
+    const paidCount = await Player.countDocuments({
+      _id: { $in: team.players },
+      position: { $ne: 'Goalkeeper' },
+    });
+    const afterPaidBuy = paidCount + 1;
+    const stillRequired = Math.max(0, 8 - afterPaidBuy);
+    const minimumReserved = stillRequired * 500;
+    if (team.remainingBudget - price < minimumReserved) {
+      throw new Error(
+        `Cannot bid more than ${team.remainingBudget - minimumReserved}. Must reserve 500 per mandatory slot remaining.`
+      );
+    }
+  }
+
+  // Goalkeepers are free — validate price is 0
+  if (isGoalkeeper && price !== 0) {
+    throw new Error('Goalkeepers must be signed for free (price = 0).');
   }
 
   player.status = 'sold';
@@ -126,6 +144,6 @@ export async function sellPlayer(playerId: string, teamId: string, price: number
   revalidatePath('/auction');
   revalidatePath('/teams');
   revalidatePath('/players');
-  
+
   return { success: true };
 }

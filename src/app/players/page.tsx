@@ -18,7 +18,7 @@ export default async function PlayersPage() {
         
         <div className="w-full lg:w-2/3">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-xl md:text-2xl font-black uppercase tracking-tighter">Registered Prospects ({players.length}/66)</h2>
+            <h2 className="text-xl md:text-2xl font-black uppercase tracking-tighter">Registered Prospects ({players.length}/80)</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
             {players.map((player: any) => (
