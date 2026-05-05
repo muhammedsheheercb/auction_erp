@@ -6,7 +6,7 @@ import Team from '@/models/Team';
 import { revalidatePath } from 'next/cache';
 import { uploadFile } from '@/lib/upload';
 
-export async function createPlayer(formData: FormData) {
+export async function createPlayer(_prevState: { success?: boolean; error?: string | null }, formData: FormData) {
   await connectDB();
 
   const name = formData.get('name') as string;

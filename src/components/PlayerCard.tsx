@@ -24,6 +24,17 @@ export default function PlayerCard({ player }: PlayerCardProps) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string>(player.photo);
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) setPhotoPreview(URL.createObjectURL(file));
+  }
+
+  function handleEditClose() {
+    setShowEdit(false);
+    setPhotoPreview(player.photo);
+  }
 
   const handleEditSubmit = async (formData: FormData) => {
     setLoading(true);
@@ -71,7 +82,7 @@ export default function PlayerCard({ player }: PlayerCardProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setShowEdit(false)}
+              onClick={handleEditClose}
               className="absolute inset-0 bg-black/80 backdrop-blur-md"
             />
             <motion.div
@@ -83,7 +94,7 @@ export default function PlayerCard({ player }: PlayerCardProps) {
               <form action={handleEditSubmit} className="p-8 space-y-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-black uppercase italic tracking-tighter">Edit Player</h3>
-                  <button type="button" onClick={() => setShowEdit(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                  <button type="button" onClick={handleEditClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
@@ -126,12 +137,21 @@ export default function PlayerCard({ player }: PlayerCardProps) {
 
                 <div>
                   <label className="block text-[10px] font-black uppercase text-green-500 mb-1">Update Photo</label>
+                  <div className="mb-2 rounded-xl overflow-hidden border border-white/10 h-36 w-full">
+                    <img
+                      src={photoPreview}
+                      alt="Current photo"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   <input
                     type="file"
                     name="photo"
                     accept="image/*"
+                    onChange={handlePhotoChange}
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all text-xs font-bold file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-green-600 file:text-black"
                   />
+                  <p className="text-[9px] text-muted-foreground mt-1 uppercase">Leave empty to keep current photo</p>
                 </div>
 
                 <button

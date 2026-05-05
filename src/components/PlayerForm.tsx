@@ -1,27 +1,22 @@
 'use client'
 
-import { useState } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
 import { createPlayer } from '@/actions/playerActions';
 
-export default function PlayerForm({ nextNumber }: { nextNumber: number }) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+type State = { success?: boolean; error?: string | null };
 
-  async function handleSubmit(formData: FormData) {
-    setLoading(true);
-    setError(null);
-    const result = await createPlayer(formData);
-    setLoading(false);
-    
-    if (result.success) {
-      (document.getElementById('player-form') as HTMLFormElement).reset();
-    } else {
-      setError(result.error || 'Something went wrong');
+export default function PlayerForm({ nextNumber }: { nextNumber: number }) {
+  const [state, formAction, pending] = useActionState<State, FormData>(createPlayer, {});
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (state.success) {
+      formRef.current?.reset();
     }
-  }
+  }, [state]);
 
   return (
-    <form id="player-form" action={handleSubmit} className="glass p-6 rounded-2xl space-y-4 border-l-4 border-l-green-500">
+    <form ref={formRef} id="player-form" action={formAction} className="glass p-6 rounded-2xl space-y-4 border-l-4 border-l-green-500">
       <div>
         <label className="block text-xs font-black text-green-500 uppercase tracking-widest mb-1">Player Name</label>
         <input
@@ -31,7 +26,7 @@ export default function PlayerForm({ nextNumber }: { nextNumber: number }) {
           className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all font-bold"
         />
       </div>
-      
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-black text-green-500 uppercase tracking-widest mb-1">Position</label>
@@ -71,15 +66,15 @@ export default function PlayerForm({ nextNumber }: { nextNumber: number }) {
         </div>
         <p className="text-[10px] text-muted-foreground mt-2 uppercase">Leave empty for /images/players/{nextNumber}.webp</p>
       </div>
-      
-      {error && <p className="text-red-500 text-[10px] font-bold bg-red-500/10 p-2 rounded-lg">{error}</p>}
-      
+
+      {state.error && <p className="text-red-500 text-[10px] font-bold bg-red-500/10 p-2 rounded-lg">{state.error}</p>}
+
       <button
         type="submit"
-        disabled={loading}
+        disabled={pending}
         className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-800/50 text-black font-black py-4 rounded-xl transition-all shadow-xl shadow-green-500/20 uppercase tracking-widest text-sm"
       >
-        {loading ? 'Adding Player...' : 'Register Prospect'}
+        {pending ? 'Adding Player...' : 'Register Prospect'}
       </button>
     </form>
   );
