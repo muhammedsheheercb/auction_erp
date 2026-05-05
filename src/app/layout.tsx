@@ -1,21 +1,29 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Outfit, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Cheloor Super League - Football Auction",
-  description: "Official Player Auction System for Cheloor Super League",
+  title: "CSL Draft 2026 | Cheloor Super League",
+  description: "Official Player Auction & Draft System for Cheloor Super League Season 7",
 };
 
 export default function RootLayout({
@@ -26,10 +34,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-[#0a0a0a] text-white selection:bg-blue-500/30`}
+        className={`${jakarta.variable} ${outfit.variable} ${jetbrainsMono.variable} antialiased min-h-screen bg-[#020617] text-white selection:bg-amber-500/20`}
       >
         <Navbar />
-        <main className="pt-16 min-h-screen">
+        <main className="min-h-screen">
           {children}
         </main>
       </body>

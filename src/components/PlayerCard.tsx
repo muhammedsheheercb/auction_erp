@@ -1,11 +1,10 @@
 'use client'
 
-import { Trash2, Edit2 } from 'lucide-react';
+import { Trash2, Edit2, ChevronRight, X } from 'lucide-react';
 import { deletePlayer, updatePlayer } from '@/actions/playerActions';
 import { useState } from 'react';
 import ConfirmModal from './ConfirmModal';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
 
 interface PlayerCardProps {
   player: {
@@ -68,10 +67,10 @@ export default function PlayerCard({ player }: PlayerCardProps) {
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}
         onConfirm={handleDelete}
-        title="Release Player?"
-        message={`Are you sure you want to remove ${player.name} from the registry?`}
-        confirmText="Accept"
-        cancelText="Decline"
+        title="Release Athlete?"
+        message={`Confirm the removal of ${player.name} from the Season 7 draft registry.`}
+        confirmText="Confirm Removal"
+        cancelText="Cancel"
       />
 
       {/* Edit Modal */}
@@ -83,83 +82,78 @@ export default function PlayerCard({ player }: PlayerCardProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={handleEditClose}
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+              className="absolute inset-0 bg-[#020617]/90 backdrop-blur-xl"
             />
             <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative glass max-w-md w-full rounded-[3rem] border-2 border-green-500/30 overflow-hidden"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative glass max-w-md w-full rounded-[3rem] border border-white/10 overflow-hidden shadow-2xl"
             >
-              <form action={handleEditSubmit} className="p-8 space-y-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-black uppercase italic tracking-tighter">Edit Player</h3>
-                  <button type="button" onClick={handleEditClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                    <X className="w-5 h-5" />
+              <form action={handleEditSubmit} className="p-10 space-y-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-2xl font-black uppercase italic tracking-tighter">Edit Athlete</h3>
+                  <button type="button" onClick={handleEditClose} className="p-3 hover:bg-white/5 rounded-full transition-all">
+                    <X className="w-6 h-6" />
                   </button>
                 </div>
                 
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-green-500 mb-1">Player Name</label>
-                  <input
-                    name="name"
-                    defaultValue={player.name}
-                    required
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all font-bold"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-green-500 mb-1">Position</label>
-                    <select
-                      name="position"
-                      defaultValue={player.position}
-                      className="input-base select-dark text-xs"
-                    >
-                      <option value="Goalkeeper">Goalkeeper</option>
-                      <option value="Defender">Defender</option>
-                      <option value="Midfielder">Midfielder</option>
-                      <option value="Forward">Forward</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-green-500 mb-1">Number</label>
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Athlete Name</label>
                     <input
-                      name="number"
-                      type="number"
-                      defaultValue={player.number}
+                      name="name"
+                      defaultValue={player.name}
                       required
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all text-xs font-bold"
+                      className="input-base"
                     />
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-green-500 mb-1">Update Photo</label>
-                  <div className="mb-2 rounded-xl overflow-hidden border border-white/10 h-36 w-full">
-                    <img
-                      src={photoPreview}
-                      alt="Current photo"
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Position</label>
+                      <select name="position" defaultValue={player.position} className="input-base text-sm">
+                        <option value="Goalkeeper">Goalkeeper</option>
+                        <option value="Defender">Defender</option>
+                        <option value="Midfielder">Midfielder</option>
+                        <option value="Forward">Forward</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Scout ID</label>
+                      <input
+                        name="number"
+                        type="number"
+                        defaultValue={player.number}
+                        required
+                        className="input-base text-sm"
+                      />
+                    </div>
                   </div>
-                  <input
-                    type="file"
-                    name="photo"
-                    accept="image/*"
-                    onChange={handlePhotoChange}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all text-xs font-bold file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-green-600 file:text-black"
-                  />
-                  <p className="text-[9px] text-muted-foreground mt-1 uppercase">Leave empty to keep current photo</p>
+
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Profile Image</label>
+                    <div className="flex items-center gap-6">
+                      <div className="rounded-2xl overflow-hidden border border-white/10 h-24 w-20 bg-white/5 flex items-center justify-center">
+                        <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
+                      <input
+                        type="file"
+                        name="photo"
+                        accept="image/*"
+                        onChange={handlePhotoChange}
+                        className="text-xs font-bold file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-amber-500 file:text-black file:hover:bg-amber-400 cursor-pointer"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-black font-black py-4 rounded-2xl transition-all shadow-xl shadow-green-500/20 uppercase tracking-widest text-xs mt-4"
+                  className="btn-primary w-full py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] mt-4"
                 >
-                  {loading ? 'Saving...' : 'Save Player Changes'}
+                  {loading ? 'Processing...' : 'Save Profile Changes'}
                 </button>
               </form>
             </motion.div>
@@ -167,50 +161,69 @@ export default function PlayerCard({ player }: PlayerCardProps) {
         )}
       </AnimatePresence>
 
-      <div className={`glass rounded-2xl overflow-hidden card-hover group border-b-4 border-b-green-600 relative ${isDeleting ? 'opacity-50 grayscale' : ''}`}>
-        <div className="relative h-48 w-full bg-secondary overflow-hidden">
+      <motion.div 
+        whileHover={{ y: -8 }}
+        className={`glass rounded-[2.5rem] overflow-hidden group relative transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-500/10 ${isDeleting ? 'opacity-30' : ''}`}
+      >
+        <div className="relative h-64 w-full bg-slate-900 overflow-hidden">
           <img
             src={player.photo}
             alt={player.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
           />
           
+          <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+
           {/* Actions Overlay */}
-          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-3">
             <button 
               onClick={() => setShowEdit(true)}
-              className="p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors shadow-xl"
-              title="Edit Player"
+              className="p-3 bg-white/10 text-white rounded-full hover:bg-amber-500 hover:text-black transition-all shadow-xl active:scale-90"
             >
               <Edit2 className="w-5 h-5" />
             </button>
             <button 
               onClick={() => setShowConfirm(true)}
-              className="p-3 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors shadow-xl"
-              title="Delete Player"
+              className="p-3 bg-white/10 text-white rounded-full hover:bg-rose-500 hover:text-white transition-all shadow-xl active:scale-90"
             >
               <Trash2 className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="absolute top-2 right-2 bg-green-600 text-black text-[10px] font-black px-2 py-1 rounded shadow-lg italic">
+          <div className="absolute top-4 right-4 bg-amber-500 text-black text-[11px] font-black px-3 py-1 rounded-full shadow-2xl italic tracking-tighter">
             #{player.number}
           </div>
-          <div className={`absolute top-2 left-2 text-[8px] uppercase font-black px-2 py-0.5 rounded shadow-lg ${
-            player.status === 'available' ? 'bg-green-500 text-black' : 
-            player.status === 'sold' ? 'bg-red-500 text-white' : 'bg-gray-500 text-white'
+
+          <div className={`absolute top-4 left-4 text-[9px] uppercase font-black px-3 py-1 rounded-full shadow-2xl tracking-[0.15em] border border-white/10 backdrop-blur-md ${
+            player.status === 'available' ? 'bg-emerald-500/20 text-emerald-400' : 
+            player.status === 'sold' ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-500/20 text-slate-400'
           }`}>
-            {player.status === 'available' ? 'Draftable' : player.status}
+            {player.status === 'available' ? 'Draft Eligible' : player.status}
           </div>
         </div>
-        <div className="p-4 bg-white/5">
-          <h3 className="text-md font-black truncate uppercase tracking-tighter italic">{player.name}</h3>
-          <div className="flex items-center justify-between mt-2">
-            <span className="text-[10px] text-green-400 font-bold uppercase tracking-widest">{player.position}</span>
-            <span className="text-xs font-black text-white bg-white/10 px-2 py-0.5 rounded">B: {player.basePrice}</span>
+
+        <div className="p-6 space-y-4">
+          <div className="flex justify-between items-start gap-2">
+            <h3 className="text-xl font-black truncate uppercase tracking-tighter italic text-white leading-tight">{player.name}</h3>
+            <div className="text-right shrink-0">
+              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Base Value</p>
+              <p className="text-sm font-black italic text-amber-500">{player.basePrice} pts</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-between border-t border-white/5 pt-4">
+            <span className={`text-[10px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded ${
+              player.position === 'Goalkeeper' ? 'badge-gk' :
+              player.position === 'Defender'   ? 'badge-def' :
+              player.position === 'Midfielder' ? 'badge-mid' : 'badge-fwd'
+            }`}>{player.position}</span>
+            
+            <div className="flex items-center gap-1 text-[9px] font-black text-slate-500 group-hover:text-amber-500 transition-colors uppercase tracking-widest">
+              Review Profile <ChevronRight className="w-3 h-3" />
+            </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </>
   );
 }

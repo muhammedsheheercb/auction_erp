@@ -2,10 +2,9 @@
 
 import { useActionState, useEffect, useRef } from 'react';
 import { createPlayer } from '@/actions/playerActions';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, ShieldAlert } from 'lucide-react';
 
 type State = { success?: boolean; error?: string | null };
-
 
 export default function PlayerForm({ nextNumber }: { nextNumber: number }) {
   const [state, formAction, pending] = useActionState<State, FormData>(createPlayer, {});
@@ -20,24 +19,24 @@ export default function PlayerForm({ nextNumber }: { nextNumber: number }) {
       ref={formRef}
       id="player-form"
       action={formAction}
-      className="glass rounded-2xl overflow-hidden border-l-4 border-l-green-500"
+      className="glass rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl"
     >
       {/* Header */}
-      <div className="px-6 pt-6 pb-4 border-b border-white/[0.07] flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-green-500/15 border border-green-500/25 flex items-center justify-center shrink-0">
-          <UserPlus className="w-4 h-4 text-green-400" />
+      <div className="px-8 pt-8 pb-6 border-b border-white/5 flex items-center gap-4 bg-white/3">
+        <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+          <UserPlus className="w-6 h-6 text-amber-500" />
         </div>
         <div>
-          <p className="text-[10px] font-black text-green-500 uppercase tracking-[0.2em]">Scout Registry</p>
-          <p className="text-[11px] text-white/40 font-medium">Register a new prospect</p>
+          <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] leading-none mb-2">Scout Registry</p>
+          <p className="text-xl font-black uppercase italic tracking-tighter text-white leading-none">Draft Enrollment</p>
         </div>
       </div>
 
-      <div className="p-6 space-y-5">
+      <div className="p-8 space-y-6">
         {/* Name */}
         <div>
-          <label className="block text-[10px] font-black text-green-400 uppercase tracking-[0.18em] mb-1.5">
-            Player Name
+          <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">
+            Athlete Full Name
           </label>
           <input
             name="name"
@@ -48,58 +47,61 @@ export default function PlayerForm({ nextNumber }: { nextNumber: number }) {
         </div>
 
         {/* Position + Number */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-[10px] font-black text-green-400 uppercase tracking-[0.18em] mb-1.5">
-              Position
+            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">
+              Primary Position
             </label>
             <select
               name="position"
               required
               defaultValue="Goalkeeper"
-              className="input-base select-dark"
+              className="input-base text-sm"
             >
               <option value="Goalkeeper">Goalkeeper</option>
               <option value="Defender">Defender</option>
               <option value="Midfielder">Midfielder</option>
               <option value="Forward">Forward</option>
             </select>
-            <p className="text-[9px] mt-1 text-amber-400/70 uppercase tracking-wide">🧤 GK = Free signing</p>
           </div>
           <div>
-            <label className="block text-[10px] font-black text-green-400 uppercase tracking-[0.18em] mb-1.5">
-              Squad No.
+            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">
+              Auto Scout ID
             </label>
             <input
               name="number"
               type="number"
               value={nextNumber}
               readOnly
-              className="input-base ring-1 ring-green-500/30 text-green-400 cursor-not-allowed font-black text-lg"
+              className="input-base border-amber-500/30 text-amber-500 cursor-not-allowed font-black text-lg bg-amber-500/5"
             />
-            <p className="text-[9px] mt-1 text-white/30 uppercase tracking-wide">Auto-assigned</p>
           </div>
         </div>
 
         {/* Photo */}
         <div>
-          <label className="block text-[10px] font-black text-green-400 uppercase tracking-[0.18em] mb-1.5">
-            Photo Upload
+          <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">
+            Profile Portrait
           </label>
-          <input
-            type="file"
-            name="photo"
-            accept="image/*"
-            className="input-base text-xs file:mr-3 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-green-600 file:text-black hover:file:bg-green-500 file:cursor-pointer"
-          />
-          <p className="text-[9px] text-white/30 mt-1 uppercase tracking-wide">
-            Leave empty → /images/players/{nextNumber}.webp
-          </p>
+          <div className="relative group">
+            <input
+              type="file"
+              name="photo"
+              accept="image/*"
+              className="input-base text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-amber-500 file:text-black hover:file:bg-amber-400 file:cursor-pointer"
+            />
+          </div>
+          <div className="mt-3 flex items-start gap-2 bg-white/3 p-3 rounded-xl border border-white/5">
+            <ShieldAlert className="w-3.5 h-3.5 text-slate-600 shrink-0 mt-0.5" />
+            <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest leading-relaxed">
+              Optional: If empty, the system will use default scout file <span className="text-amber-500">/{nextNumber}.webp</span>
+            </p>
+          </div>
         </div>
 
         {/* Error */}
         {state.error && (
-          <div className="text-red-400 text-[10px] font-bold bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg">
+          <div className="text-rose-400 text-[10px] font-black bg-rose-500/10 border border-rose-500/20 px-4 py-3 rounded-2xl uppercase tracking-widest">
             {state.error}
           </div>
         )}
@@ -108,9 +110,9 @@ export default function PlayerForm({ nextNumber }: { nextNumber: number }) {
         <button
           type="submit"
           disabled={pending}
-          className="w-full bg-green-600 hover:bg-green-500 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-black font-black py-4 rounded-xl transition-all shadow-lg shadow-green-900/40 uppercase tracking-[0.15em] text-sm"
+          className="btn-primary w-full py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.25em] active:scale-95 shadow-2xl shadow-amber-500/20"
         >
-          {pending ? 'Registering…' : 'Register Prospect'}
+          {pending ? 'Processing Enrollment...' : 'Confirm Draft Entry'}
         </button>
       </div>
     </form>

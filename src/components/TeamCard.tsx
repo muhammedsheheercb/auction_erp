@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react';
-import { Trash2, FileText, Users, Wallet, X, Edit2, Download } from 'lucide-react';
+import { Trash2, FileText, Users, Wallet, X, Edit2, Download, ChevronRight } from 'lucide-react';
 import { deleteTeam, updateTeam } from '@/actions/teamActions';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsPDF from 'jspdf';
@@ -40,30 +40,29 @@ export default function TeamCard({ team }: TeamCardProps) {
     }
   };
 
-
   const downloadPDF = (e: React.MouseEvent) => {
     e.stopPropagation();
     const doc = new jsPDF();
     
     doc.setFontSize(22);
-    doc.setTextColor(22, 163, 74);
+    doc.setTextColor(234, 179, 8); // Amber-500
     doc.text('CHELEOR SUPER LEAGUE S7', 105, 20, { align: 'center' });
     
     doc.setFontSize(16);
     doc.setTextColor(0, 0, 0);
-    doc.text(`Team Summary: ${team.name.toUpperCase()}`, 105, 35, { align: 'center' });
+    doc.text(`Official Squad: ${team.name.toUpperCase()}`, 105, 35, { align: 'center' });
     
     doc.setFontSize(12);
-    doc.text(`Manager 1: ${team.manager1}`, 20, 50);
-    doc.text(`Manager 2: ${team.manager2}`, 20, 58);
-    doc.text(`Remaining Budget: ${team.remainingBudget}`, 140, 50);
-    doc.text(`Total Players: ${team.players.length}/9`, 140, 58);
+    doc.text(`Lead Manager: ${team.manager1}`, 20, 50);
+    doc.text(`Co-Manager: ${team.manager2}`, 20, 58);
+    doc.text(`Available Points: ${team.remainingBudget}`, 140, 50);
+    doc.text(`Roster Count: ${team.players.length}/10`, 140, 58);
     
     const tableData = team.players.map((p: any) => [
       p.number,
       p.name,
       p.position,
-      p.soldPrice ?? 'FREE'
+      p.soldPrice === 0 ? 'FREE' : p.soldPrice
     ]);
 
     autoTable(doc, {
@@ -71,11 +70,11 @@ export default function TeamCard({ team }: TeamCardProps) {
       head: [['#', 'Player Name', 'Position', 'Price']],
       body: tableData,
       theme: 'grid',
-      headStyles: { fillColor: [22, 163, 74] },
+      headStyles: { fillColor: [234, 179, 8] },
       styles: { fontStyle: 'bold' }
     });
 
-    doc.save(`${team.name}_squad.pdf`);
+    doc.save(`${team.name.replace(/\s+/g, '_')}_squad.pdf`);
   };
 
   const handleEditSubmit = async (formData: FormData) => {
@@ -100,91 +99,94 @@ export default function TeamCard({ team }: TeamCardProps) {
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}
         onConfirm={handleDelete}
-        title="Disband Team?"
-        message={`Are you sure you want to delete ${team.name}? All signed players will be released back into the draft.`}
-        confirmText="Accept"
-        cancelText="Decline"
+        title="Disband Franchise?"
+        message={`Confirm the permanent deletion of ${team.name}. All assigned athletes will return to the draft pool.`}
+        confirmText="Confirm Deletion"
+        cancelText="Cancel"
       />
 
       {/* Edit Modal */}
       <AnimatePresence>
         {showEdit && (
-          <div className="fixed inset-0 z-200 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={handleEditClose}
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+              className="absolute inset-0 bg-[#020617]/90 backdrop-blur-xl"
             />
             <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative glass max-w-md w-full rounded-[3rem] border-2 border-blue-500/30 overflow-hidden"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative glass max-w-md w-full rounded-[3rem] border border-white/10 overflow-hidden"
             >
-              <form action={handleEditSubmit} className="p-8 space-y-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-black uppercase italic tracking-tighter">Edit Team</h3>
-                  <button type="button" onClick={handleEditClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                    <X className="w-5 h-5" />
+              <form action={handleEditSubmit} className="p-10 space-y-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-2xl font-black uppercase italic tracking-tighter">Edit Franchise</h3>
+                  <button type="button" onClick={handleEditClose} className="p-3 hover:bg-white/5 rounded-full transition-all">
+                    <X className="w-6 h-6" />
                   </button>
                 </div>
                 
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-blue-500 mb-1">Team Name</label>
-                  <input
-                    name="name"
-                    defaultValue={team.name}
-                    required
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-bold"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-blue-500 mb-1">Manager 1</label>
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Franchise Name</label>
                     <input
-                      name="manager1"
-                      defaultValue={team.manager1}
+                      name="name"
+                      defaultValue={team.name}
                       required
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm font-bold"
+                      className="input-base"
                     />
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-blue-500 mb-1">Manager 2</label>
-                    <input
-                      name="manager2"
-                      defaultValue={team.manager2}
-                      required
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm font-bold"
-                    />
-                  </div>
-                </div>
 
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-blue-500 mb-1">Update Logo</label>
-                  {logoPreview && (
-                    <div className="mb-2 rounded-xl overflow-hidden border border-white/10 h-24 w-24 bg-white/5 flex items-center justify-center">
-                      <img src={logoPreview} alt="Current logo" className="w-full h-full object-contain p-2" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Manager 1</label>
+                      <input
+                        name="manager1"
+                        defaultValue={team.manager1}
+                        required
+                        className="input-base text-sm"
+                      />
                     </div>
-                  )}
-                  <input
-                    type="file"
-                    name="logo"
-                    accept="image/*"
-                    onChange={handleLogoChange}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs font-bold file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-blue-600 file:text-white"
-                  />
-                  <p className="text-[9px] text-white/30 mt-1 uppercase tracking-wide">Leave empty to keep current logo</p>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Manager 2</label>
+                      <input
+                        name="manager2"
+                        defaultValue={team.manager2}
+                        required
+                        className="input-base text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Update Crest</label>
+                    <div className="flex items-center gap-6">
+                      {logoPreview && (
+                        <div className="rounded-2xl overflow-hidden border border-white/10 h-20 w-20 bg-white/5 flex items-center justify-center p-2">
+                          <img src={logoPreview} alt="Preview" className="w-full h-full object-contain" />
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        name="logo"
+                        accept="image/*"
+                        onChange={handleLogoChange}
+                        className="text-xs font-bold file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-amber-500 file:text-black file:hover:bg-amber-400 cursor-pointer"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-blue-500/20 uppercase tracking-widest text-xs mt-4"
+                  className="btn-primary w-full py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] mt-4"
                 >
-                  {loading ? 'Saving Changes...' : 'Save Team Changes'}
+                  {loading ? 'Saving Changes...' : 'Update Franchise'}
                 </button>
               </form>
             </motion.div>
@@ -192,154 +194,170 @@ export default function TeamCard({ team }: TeamCardProps) {
         )}
       </AnimatePresence>
 
-      <div 
+      <motion.div 
+        whileHover={{ y: -8 }}
         onClick={() => setShowDetails(true)}
-        className={`glass rounded-4xl overflow-hidden card-hover border-t-4 border-t-green-500 group relative cursor-pointer ${isDeleting ? 'opacity-50 grayscale' : ''}`}
+        className={`glass rounded-[2.5rem] overflow-hidden group relative cursor-pointer transition-all duration-500 hover:shadow-2xl hover:shadow-amber-500/10 ${isDeleting ? 'opacity-30' : ''}`}
       >
-        <div className="p-6 bg-white/5 border-b border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 shrink-0 group-hover:scale-110 transition-transform">
+        <div className="p-8 bg-white/3 border-b border-white/5 flex items-center justify-between">
+          <div className="flex items-center gap-5">
+            <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:scale-110 transition-all duration-500">
               {team.logo ? (
-                <img src={team.logo} alt={team.name} className="w-8 h-8 object-contain" />
+                <img src={team.logo} alt={team.name} className="w-10 h-10 object-contain" />
               ) : (
-                <FileText className="w-6 h-6 text-green-500/50" />
+                <Trophy className="w-7 h-7 text-slate-700" />
               )}
             </div>
             <div>
-              <h3 className="text-xl font-bold uppercase tracking-tighter">{team.name}</h3>
-              <p className="text-[10px] text-muted-foreground uppercase font-black">{team.manager1} & {team.manager2}</p>
+              <h3 className="text-2xl font-black uppercase tracking-tighter text-white">{team.name}</h3>
+              <p className="text-[10px] text-slate-500 uppercase font-black tracking-[0.1em]">{team.manager1} & {team.manager2}</p>
             </div>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowEdit(true);
-              }}
-              className="p-2 bg-blue-600/10 text-blue-500 rounded-xl hover:bg-blue-600 hover:text-white transition-all"
-              title="Edit Team"
+              onClick={(e) => { e.stopPropagation(); setShowEdit(true); }}
+              className="p-2.5 bg-white/5 text-slate-400 rounded-xl hover:bg-amber-500 hover:text-black transition-all"
             >
               <Edit2 className="w-4 h-4" />
             </button>
             <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowConfirm(true);
-              }}
-              className="p-2 bg-red-600/10 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all"
-              title="Delete Team"
+              onClick={(e) => { e.stopPropagation(); setShowConfirm(true); }}
+              className="p-2.5 bg-white/5 text-slate-400 rounded-xl hover:bg-rose-500 hover:text-white transition-all"
             >
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
         </div>
         
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground flex items-center gap-1 font-bold">
-                <Users className="w-3 h-3 text-green-500" /> {team.players.length}/10 Players
-              </span>
+        <div className="p-8 space-y-6">
+          <div className="flex justify-between items-end">
+            <div>
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Squad Strength</p>
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-emerald-500" />
+                <span className="text-xl font-black italic">{team.players.length}/10</span>
+              </div>
             </div>
-            <span className="text-sm text-green-400 flex items-center gap-1 font-black">
-              <Wallet className="w-3 h-3" /> {team.remainingBudget}
-            </span>
+            <div className="text-right">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Available Budget</p>
+              <div className="flex items-center justify-end gap-2">
+                <Wallet className="w-4 h-4 text-amber-500" />
+                <span className="text-xl font-black italic text-amber-500">{team.remainingBudget}</span>
+              </div>
+            </div>
           </div>
           
-          <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-green-600 rounded-full transition-all duration-1000" 
-              style={{ width: `${(team.players.length / 10) * 100}%` }}
+          <div className="relative w-full h-2 bg-white/5 rounded-full overflow-hidden">
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: `${(team.players.length / 10) * 100}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full" 
             />
           </div>
           
-          <p className="text-[9px] text-center mt-3 text-muted-foreground uppercase font-black tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-            Click to view full squad
-          </p>
+          <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 transition-all group-hover:text-amber-500">
+            View Full Roster <ChevronRight className="w-3 h-3" />
+          </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Details Modal */}
       <AnimatePresence>
         {showDetails && (
-          <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowDetails(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+              className="absolute inset-0 bg-[#020617]/90 backdrop-blur-2xl"
             />
             <motion.div 
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative glass max-w-2xl w-full max-h-[80vh] overflow-hidden rounded-[3rem] border-2 border-green-500/30 flex flex-col"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative glass max-w-2xl w-full max-h-[85vh] overflow-hidden rounded-[3rem] border border-white/10 flex flex-col shadow-2xl"
             >
-              <div className="p-8 border-b border-white/10 flex justify-between items-center bg-green-500/5">
+              <div className="p-10 border-b border-white/5 flex justify-between items-center bg-white/3">
                 <div className="flex items-center gap-6">
-                  <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10">
-                    <img src={team.logo} className="w-10 h-10 object-contain" alt="" />
+                  <div className="w-20 h-20 rounded-[2rem] bg-white/5 flex items-center justify-center border border-white/10 p-3">
+                    {team.logo ? (
+                      <img src={team.logo} className="w-full h-full object-contain" alt="" />
+                    ) : (
+                      <Trophy className="w-10 h-10 text-amber-500" />
+                    )}
                   </div>
                   <div>
-                    <h2 className="text-3xl font-black uppercase italic tracking-tighter leading-none">{team.name}</h2>
-                    <p className="text-sm text-green-500 font-bold uppercase mt-1">Season 7 Squad</p>
+                    <h2 className="text-4xl font-black uppercase italic tracking-tighter text-white leading-none">{team.name}</h2>
+                    <p className="text-[11px] font-black uppercase tracking-[0.3em] text-amber-500 mt-2">Elite Franchise Profile</p>
                   </div>
                 </div>
-                <button onClick={() => setShowDetails(false)} className="p-3 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
-                  <X className="w-6 h-6" />
+                <button onClick={() => setShowDetails(false)} className="p-4 bg-white/5 rounded-full hover:bg-white/10 transition-all active:scale-90">
+                  <X className="w-8 h-8" />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-8">
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                  <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                    <p className="text-[10px] text-muted-foreground uppercase font-black mb-1">Managers</p>
-                    <p className="text-sm font-bold">{team.manager1} & {team.manager2}</p>
+              <div className="flex-1 overflow-y-auto p-10">
+                <div className="grid grid-cols-2 gap-6 mb-10">
+                  <div className="bg-white/3 p-6 rounded-[2rem] border border-white/5">
+                    <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-2">Managerial Team</p>
+                    <p className="text-lg font-black italic">{team.manager1} & {team.manager2}</p>
                   </div>
-                  <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                    <p className="text-[10px] text-muted-foreground uppercase font-black mb-1">Budget Left</p>
-                    <p className="text-sm font-bold text-green-400">{team.remainingBudget}</p>
+                  <div className="bg-white/3 p-6 rounded-[2rem] border border-white/5">
+                    <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-2">Franchise Budget</p>
+                    <p className="text-lg font-black italic text-emerald-400">{team.remainingBudget} PTS</p>
                   </div>
                 </div>
 
-                <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4 px-2">Signed Players ({team.players.length}/10)</h3>
-                <div className="space-y-3">
+                <div className="flex items-center justify-between mb-6 px-2">
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Official Roster ({team.players.length}/10)</h3>
+                  <div className="h-[1px] flex-1 bg-white/5 mx-6" />
+                </div>
+
+                <div className="space-y-4">
                   {team.players.map((player: any) => (
-                    <div key={player._id} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-green-500/20 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-secondary border border-white/10">
-                          <img src={player.photo} className="w-full h-full object-cover" alt="" />
+                    <div key={player._id} className="group flex items-center justify-between p-5 bg-white/3 rounded-[2rem] border border-white/5 hover:border-amber-500/20 transition-all duration-300">
+                      <div className="flex items-center gap-5">
+                        <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-900 border border-white/10">
+                          <img src={player.photo} className="w-full h-full object-cover transition-all duration-500" alt="" />
                         </div>
                         <div>
-                          <p className="font-black uppercase text-sm tracking-tight">{player.name}</p>
-                          <p className="text-[10px] text-green-500 font-bold uppercase">{player.position} • #{player.number}</p>
+                          <p className="font-black uppercase text-base tracking-tight text-white">{player.name}</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">
+                            <span className={`px-2 py-0.5 rounded-md ${
+                              player.position === 'Goalkeeper' ? 'badge-gk' :
+                              player.position === 'Defender'   ? 'badge-def' :
+                              player.position === 'Midfielder' ? 'badge-mid' : 'badge-fwd'
+                            }`}>{player.position}</span>
+                             &nbsp;•&nbsp; #{player.number}
+                          </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-black leading-none italic" style={{ color: player.soldPrice === 0 ? '#fbbf24' : 'white' }}>
+                        <p className="text-2xl font-black italic tabular-nums leading-none" style={{ color: player.soldPrice === 0 ? '#fbbf24' : 'white' }}>
                           {player.soldPrice === 0 ? 'FREE' : player.soldPrice}
                         </p>
-                        <p className="text-[8px] text-muted-foreground uppercase font-black mt-1">Points</p>
+                        <p className="text-[9px] text-slate-500 uppercase font-black mt-2 tracking-widest">Acquired For</p>
                       </div>
                     </div>
                   ))}
                   {team.players.length === 0 && (
-                    <div className="text-center py-10 text-muted-foreground italic text-sm">
-                      No players signed yet.
+                    <div className="text-center py-20 bg-white/3 rounded-[3rem] border border-dashed border-white/5">
+                      <p className="text-slate-600 font-black uppercase tracking-widest text-sm">No Assets Acquired</p>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="p-6 bg-white/5 border-t border-white/10">
+              <div className="p-10 bg-white/3 border-t border-white/5">
                 <button 
                   onClick={downloadPDF}
-                  className="w-full bg-green-600 hover:bg-green-700 text-black font-black py-4 rounded-2xl transition-all shadow-xl shadow-green-500/20 flex items-center justify-center gap-2 uppercase tracking-widest text-sm"
+                  className="btn-primary w-full py-5 rounded-2xl flex items-center justify-center gap-3"
                 >
-                  <Download className="w-5 h-5" />
-                  Download Squad List PDF
+                  <Download className="w-6 h-6" />
+                  Generate Squad Report (PDF)
                 </button>
               </div>
             </motion.div>
