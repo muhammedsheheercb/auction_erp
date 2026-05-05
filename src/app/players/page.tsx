@@ -2,10 +2,12 @@ import { getPlayers } from '@/actions/playerActions';
 import PlayerForm from '@/components/PlayerForm';
 import PlayerCard from '@/components/PlayerCard';
 import { Users } from 'lucide-react';
+import { isAdmin as checkAdmin } from '@/lib/auth';
 
 export default async function PlayersPage() {
   const players = await getPlayers();
   const nextNumber = players.length + 1;
+  const isAdmin = await checkAdmin();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
@@ -14,7 +16,15 @@ export default async function PlayersPage() {
           <div className="lg:sticky lg:top-32">
             <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase leading-none mb-4">Athlete<br /><span className="text-amber-500">Registry</span></h1>
             <p className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] mb-10">Manage and enroll scouting prospects</p>
-            <PlayerForm nextNumber={nextNumber} />
+            {isAdmin ? (
+              <PlayerForm nextNumber={nextNumber} />
+            ) : (
+              <div className="glass p-8 rounded-[2.5rem] border border-white/5 text-center">
+                <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest leading-relaxed">
+                  Authentication required to enroll new athletes.
+                </p>
+              </div>
+            )}
           </div>
         </div>
         
@@ -28,7 +38,7 @@ export default async function PlayersPage() {
           
           <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
             {players.map((player: any) => (
-              <PlayerCard key={player._id} player={player} />
+              <PlayerCard key={player._id} player={player} isAdmin={isAdmin} />
             ))}
             {players.length === 0 && (
               <div className="col-span-full py-32 glass rounded-[3rem] border-dashed border-white/10 flex flex-col items-center justify-center text-center px-10">

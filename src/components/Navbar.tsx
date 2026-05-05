@@ -4,9 +4,47 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Menu, X, Home, Users, Trophy, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useCallback, useRef } from 'react';
 
-export default function Navbar() {
+import { adminLogout } from '@/actions/authActions';
+
+export default function Navbar({ isAdmin }: { isAdmin: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
+  const logoutTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleAutoLogout = useCallback(async () => {
+    if (isAdmin) {
+      console.log('Session expired due to inactivity. Logging out...');
+      await adminLogout();
+    }
+  }, [isAdmin]);
+
+  const resetTimer = useCallback(() => {
+    if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
+    if (isAdmin) {
+      // 30 minutes = 1800000ms
+      logoutTimerRef.current = setTimeout(handleAutoLogout, 1800000);
+    }
+  }, [isAdmin, handleAutoLogout]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+      
+      resetTimer(); // Initialize timer
+
+      events.forEach(event => {
+        window.addEventListener(event, resetTimer);
+      });
+
+      return () => {
+        events.forEach(event => {
+          window.removeEventListener(event, resetTimer);
+        });
+        if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
+      };
+    }
+  }, [isAdmin, resetTimer]);
 
   const navLinks = [
     { name: 'Auction', href: '/auction', icon: Play },
@@ -48,13 +86,28 @@ export default function Navbar() {
               <div className="hidden sm:flex items-center gap-4 bg-white/5 px-4 py-2 rounded-xl border border-white/5">
                 <div className="flex flex-col items-end">
                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 leading-none">Status</span>
-                  <span className="text-[11px] font-bold text-emerald-400 leading-none mt-1">Live Room</span>
+                  <span className={`text-[11px] font-bold leading-none mt-1 ${isAdmin ? 'text-amber-400' : 'text-emerald-400'}`}>
+                    {isAdmin ? 'Admin Mode' : 'Live Room'}
+                  </span>
                 </div>
                 <div className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isAdmin ? 'bg-amber-400' : 'bg-emerald-400'}`}></span>
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${isAdmin ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
                 </div>
               </div>
+
+              {/* Login/Logout Button */}
+              {isAdmin ? (
+                <form action={adminLogout} className="hidden md:block">
+                  <button className="text-[11px] font-black uppercase tracking-widest px-5 py-2.5 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-xl hover:bg-rose-500 hover:text-white transition-all active:scale-95">
+                    Sign Out
+                  </button>
+                </form>
+              ) : (
+                <Link href="/login" className="hidden md:block text-[11px] font-black uppercase tracking-widest px-5 py-2.5 bg-white/5 text-slate-400 border border-white/10 rounded-xl hover:bg-white/10 hover:text-white transition-all active:scale-95">
+                  Admin Login
+                </Link>
+              )}
 
               {/* Mobile Menu Toggle */}
               <button 
@@ -124,13 +177,28 @@ export default function Navbar() {
                 })}
               </div>
 
-              <div className="p-8 border-t border-white/5">
+              <div className="p-8 border-t border-white/5 space-y-4">
+                {isAdmin ? (
+                  <form action={adminLogout}>
+                    <button className="w-full py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest bg-rose-500 text-white shadow-xl shadow-rose-500/20 active:scale-95 transition-all">
+                      Terminate Admin Session
+                    </button>
+                  </form>
+                ) : (
+                  <Link
+                    href="/login"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center justify-center py-4 rounded-2xl bg-amber-500 text-black text-[11px] font-black uppercase tracking-widest shadow-xl shadow-amber-500/20 active:scale-95 transition-all"
+                  >
+                    Authorize Admin Access
+                  </Link>
+                )}
                 <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-4 flex items-center gap-4">
                   <div className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                   </div>
-                  <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-none">Auction System Online</span>
+                  <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-none">Draft Online</span>
                 </div>
               </div>
             </motion.div>

@@ -1,10 +1,12 @@
 import { getPlayers } from '@/actions/playerActions';
 import { getTeams } from '@/actions/teamActions';
 import AuctionInterface from '@/components/AuctionInterface';
+import { isAdmin as checkAdmin } from '@/lib/auth';
 
 export default async function AuctionPage() {
   const players = await getPlayers();
   const teams = await getTeams();
+  const isAdmin = await checkAdmin();
 
   return (
     <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
@@ -21,7 +23,7 @@ export default async function AuctionPage() {
         </p>
       </div>
       
-      <AuctionInterface players={players} teams={teams} />
+      <AuctionInterface players={players} teams={teams} isAdmin={isAdmin} />
     </div>
   );
 }

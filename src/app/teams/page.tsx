@@ -2,9 +2,11 @@ import { getTeams } from '@/actions/teamActions';
 import TeamForm from '@/components/TeamForm';
 import { Trophy } from 'lucide-react';
 import TeamCard from '@/components/TeamCard';
+import { isAdmin as checkAdmin } from '@/lib/auth';
 
 export default async function TeamsPage() {
   const teams = await getTeams();
+  const isAdmin = await checkAdmin();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
@@ -13,7 +15,15 @@ export default async function TeamsPage() {
           <div className="lg:sticky lg:top-32">
             <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase leading-none mb-4">Franchise<br /><span className="text-emerald-500">Center</span></h1>
             <p className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] mb-10">Authorize and manage Season 7 participants</p>
-            <TeamForm />
+            {isAdmin ? (
+              <TeamForm />
+            ) : (
+              <div className="glass p-8 rounded-[2.5rem] border border-white/5 text-center">
+                <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest leading-relaxed">
+                  Authentication required to manage franchises.
+                </p>
+              </div>
+            )}
           </div>
         </div>
         
@@ -27,7 +37,7 @@ export default async function TeamsPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             {teams.map((team: any) => (
-              <TeamCard key={team._id} team={team} />
+              <TeamCard key={team._id} team={team} isAdmin={isAdmin} />
             ))}
             {teams.length === 0 && (
               <div className="col-span-full py-32 glass rounded-[3rem] border-dashed border-white/10 flex flex-col items-center justify-center text-center px-10">

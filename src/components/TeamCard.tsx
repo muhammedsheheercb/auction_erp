@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react';
-import { Trash2, FileText, Users, Wallet, X, Edit2, Download, ChevronRight } from 'lucide-react';
+import { Trash2, FileText, Users, Wallet, X, Edit2, Download, ChevronRight, Trophy } from 'lucide-react';
 import { deleteTeam, updateTeam } from '@/actions/teamActions';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsPDF from 'jspdf';
@@ -10,9 +10,10 @@ import ConfirmModal from './ConfirmModal';
 
 interface TeamCardProps {
   team: any;
+  isAdmin: boolean;
 }
 
-export default function TeamCard({ team }: TeamCardProps) {
+export default function TeamCard({ team, isAdmin }: TeamCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -214,20 +215,22 @@ export default function TeamCard({ team }: TeamCardProps) {
             </div>
           </div>
           
-          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button 
-              onClick={(e) => { e.stopPropagation(); setShowEdit(true); }}
-              className="p-2.5 bg-white/5 text-slate-400 rounded-xl hover:bg-amber-500 hover:text-black transition-all"
-            >
-              <Edit2 className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={(e) => { e.stopPropagation(); setShowConfirm(true); }}
-              className="p-2.5 bg-white/5 text-slate-400 rounded-xl hover:bg-rose-500 hover:text-white transition-all"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
+          {isAdmin && (
+            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button 
+                onClick={(e) => { e.stopPropagation(); setShowEdit(true); }}
+                className="p-2.5 bg-white/5 text-slate-400 rounded-xl hover:bg-amber-500 hover:text-black transition-all"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setShowConfirm(true); }}
+                className="p-2.5 bg-white/5 text-slate-400 rounded-xl hover:bg-rose-500 hover:text-white transition-all"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
         
         <div className="p-8 space-y-6">

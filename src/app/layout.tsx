@@ -26,17 +26,21 @@ export const metadata: Metadata = {
   description: "Official Player Auction & Draft System for Cheloor Super League Season 7",
 };
 
-export default function RootLayout({
+import { isAdmin as checkAdmin } from "@/lib/auth";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isAdmin = await checkAdmin();
+
   return (
     <html lang="en" className="dark">
       <body
         className={`${jakarta.variable} ${outfit.variable} ${jetbrainsMono.variable} antialiased min-h-screen bg-[#020617] text-white selection:bg-amber-500/20`}
       >
-        <Navbar />
+        <Navbar isAdmin={isAdmin} />
         <main className="min-h-screen">
           {children}
         </main>

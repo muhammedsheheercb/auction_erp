@@ -16,9 +16,10 @@ interface PlayerCardProps {
     status: string;
     basePrice: number;
   };
+  isAdmin: boolean;
 }
 
-export default function PlayerCard({ player }: PlayerCardProps) {
+export default function PlayerCard({ player, isAdmin }: PlayerCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -175,20 +176,22 @@ export default function PlayerCard({ player }: PlayerCardProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
 
           {/* Actions Overlay */}
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-3">
-            <button 
-              onClick={() => setShowEdit(true)}
-              className="p-3 bg-white/10 text-white rounded-full hover:bg-amber-500 hover:text-black transition-all shadow-xl active:scale-90"
-            >
-              <Edit2 className="w-5 h-5" />
-            </button>
-            <button 
-              onClick={() => setShowConfirm(true)}
-              className="p-3 bg-white/10 text-white rounded-full hover:bg-rose-500 hover:text-white transition-all shadow-xl active:scale-90"
-            >
-              <Trash2 className="w-5 h-5" />
-            </button>
-          </div>
+          {isAdmin && (
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-3">
+              <button 
+                onClick={() => setShowEdit(true)}
+                className="p-3 bg-white/10 text-white rounded-full hover:bg-amber-500 hover:text-black transition-all shadow-xl active:scale-90"
+              >
+                <Edit2 className="w-5 h-5" />
+              </button>
+              <button 
+                onClick={() => setShowConfirm(true)}
+                className="p-3 bg-white/10 text-white rounded-full hover:bg-rose-500 hover:text-white transition-all shadow-xl active:scale-90"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+            </div>
+          )}
 
           <div className="absolute top-4 right-4 bg-amber-500 text-black text-[11px] font-black px-3 py-1 rounded-full shadow-2xl italic tracking-tighter">
             #{player.number}

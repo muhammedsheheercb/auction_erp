@@ -94,7 +94,7 @@ function Particle({ emoji, index }: { emoji: string; index: number }) {
 }
 
 /* ── Main component ─────────────────────────────────────────── */
-export default function AuctionInterface({ players, teams }: { players: any[], teams: any[] }) {
+export default function AuctionInterface({ players, teams, isAdmin }: { players: any[], teams: any[], isAdmin: boolean }) {
   const [searchNumber, setSearchNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -455,12 +455,14 @@ export default function AuctionInterface({ players, teams }: { players: any[], t
                           </button>
                         </div>
                       </div>
-                      <button
-                        onClick={handleMarkUnsoldClick}
-                        className="w-full py-4 border-2 border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center gap-3"
-                      >
-                        <Ban className="w-4 h-4" /> No Interest — Mark Unsold
-                      </button>
+                      {isAdmin && (
+                        <button
+                          onClick={handleMarkUnsoldClick}
+                          className="w-full py-4 border-2 border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center gap-3"
+                        >
+                          <Ban className="w-4 h-4" /> No Interest — Mark Unsold
+                        </button>
+                      )}
                     </>
                   ) : (
                     <div className="flex justify-between items-center py-4 border-t border-white/10">
@@ -563,19 +565,26 @@ export default function AuctionInterface({ players, teams }: { players: any[], t
                       </span>
                     </div>
 
-                    <button
-                      onClick={() => handleSellClick(team)}
-                      disabled={!canBid || loading}
-                      className={`w-full py-3 rounded-xl font-black transition-all uppercase tracking-[0.2em] text-[10px] active:scale-95 shadow-xl ${
-                        canBid
-                          ? isGK
-                            ? 'bg-amber-500 hover:bg-amber-400 text-black shadow-amber-500/20'
-                            : 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'
-                          : 'bg-white/5 text-slate-600 border border-white/5 cursor-not-allowed'
-                      }`}
-                    >
-                      {isFull ? 'SQUAD FULL' : isSold ? 'SOLD' : isGK ? 'SIGN FREE' : 'PLACE BID'}
-                    </button>
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleSellClick(team)}
+                        disabled={!canBid || loading}
+                        className={`w-full py-3 rounded-xl font-black transition-all uppercase tracking-[0.2em] text-[10px] active:scale-95 shadow-xl ${
+                          canBid
+                            ? isGK
+                              ? 'bg-amber-500 hover:bg-amber-400 text-black shadow-amber-500/20'
+                              : 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'
+                            : 'bg-white/5 text-slate-600 border border-white/5 cursor-not-allowed'
+                        }`}
+                      >
+                        {isFull ? 'SQUAD FULL' : isSold ? 'SOLD' : isGK ? 'SIGN FREE' : 'PLACE BID'}
+                      </button>
+                    )}
+                    {!isAdmin && (
+                      <div className="w-full py-3 rounded-xl font-black uppercase tracking-[0.2em] text-[9px] text-center border border-white/5 bg-white/3 text-slate-600">
+                        View Only Mode
+                      </div>
+                    )}
                   </motion.div>
                 );
               })}
