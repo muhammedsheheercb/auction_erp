@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { sellPlayer } from '@/actions/teamActions';
 import { updatePlayerStatus } from '@/actions/playerActions';
-import { Search, Trophy, Users, Wallet, Ban, RefreshCcw, Plus, Minus } from 'lucide-react';
+import { Search, Trophy, Users, Wallet, Ban, RefreshCcw, Plus, Minus, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ConfirmModal from './ConfirmModal';
 
@@ -60,7 +60,7 @@ const SIGN_CONFIG: Record<Position, {
     particles: ['⚡', '🟣', '🌀', '✨'],
   },
   Forward: {
-    headline: 'GOAL!!!',
+    headline: 'SIGNED!',
     sub: 'Net Buster',
     emoji: '🔥',
     bgFrom: 'from-red-950/90',
@@ -191,10 +191,6 @@ export default function AuctionInterface({ players, teams }: { players: any[], t
           teamLogo: pendingBid.team.logo || '',
           price: pendingBid.price,
         });
-        setTimeout(() => {
-          setSignedInfo(null);
-          setSearchNumber('');
-        }, 3200);
       }
     } catch (err: any) {
       setError(err.message);
@@ -233,102 +229,100 @@ export default function AuctionInterface({ players, teams }: { players: any[], t
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.6 } }}
-            className="fixed inset-0 z-100 flex items-center justify-center pointer-events-none bg-black/75 backdrop-blur-md"
+            exit={{ opacity: 0, transition: { duration: 0.5 } }}
+            className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-lg"
           >
-            <div className="relative flex flex-col items-center">
+            <div className="relative flex flex-col items-center w-full max-w-sm md:max-w-lg">
               {/* Particles */}
               {cfg.particles.map((emoji, i) => (
                 <Particle key={i} emoji={emoji} index={i} />
               ))}
 
               {/* Main card */}
-              <div className={`${cfg.animClass} relative bg-linear-to-br ${cfg.bgFrom} ${cfg.bgTo} border-2 ${cfg.border} rounded-[2.5rem] overflow-hidden shadow-2xl ${cfg.glow} w-85 md:w-100`}>
+              <div className={`${cfg.animClass} relative bg-linear-to-br ${cfg.bgFrom} ${cfg.bgTo} border-2 ${cfg.border} rounded-[2.5rem] overflow-hidden shadow-2xl ${cfg.glow} w-full`}>
 
-                {/* Player photo strip */}
-                <div className="relative h-48 w-full overflow-hidden">
+                {/* X close icon — top right corner of card */}
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.7 }}
+                  onClick={() => { setSignedInfo(null); setSearchNumber(''); }}
+                  className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 active:scale-95 transition-all"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </motion.button>
+
+                {/* Player photo — tall, fills card width */}
+                <div className="relative h-64 md:h-88 w-full overflow-hidden">
                   <img
                     src={signedInfo.playerPhoto}
                     alt={signedInfo.name}
                     className="w-full h-full object-cover object-top"
                   />
-                  {/* gradient overlay */}
-                  <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
+                  {/* dark gradient from bottom */}
+                  <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/30 to-transparent" />
 
-                  {/* position emoji top-left */}
+                  {/* position emoji — top left */}
                   <motion.span
                     initial={{ scale: 0, rotate: -30 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ delay: 0.3, type: 'spring', stiffness: 260 }}
-                    className="absolute top-3 left-3 text-4xl drop-shadow-lg select-none"
+                    className="absolute top-4 left-4 text-5xl drop-shadow-lg select-none"
                   >
                     {cfg.emoji}
                   </motion.span>
 
-                  {/* price badge top-right */}
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                      signedInfo.price === 0
-                        ? 'bg-amber-500 text-black'
-                        : 'bg-white/20 backdrop-blur-sm text-white border border-white/30'
-                    }`}
-                  >
-                    {signedInfo.price === 0 ? 'FREE 🧤' : `${signedInfo.price} pts`}
-                  </motion.div>
-
-                  {/* player name on photo */}
-                  <div className="absolute bottom-3 left-4 right-4">
+                  {/* Player name + position — bottom of photo */}
+                  <div className="absolute bottom-4 left-5 right-5">
                     <motion.h2
-                      initial={{ opacity: 0, y: 12 }}
+                      initial={{ opacity: 0, y: 14 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.45 }}
-                      className="text-2xl font-black uppercase italic tracking-tighter leading-none text-white drop-shadow-lg"
+                      transition={{ delay: 0.4 }}
+                      className="text-3xl md:text-4xl font-black uppercase italic tracking-tighter leading-none text-white drop-shadow-xl"
                     >
                       {signedInfo.name}
                     </motion.h2>
                     <motion.p
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      transition={{ delay: 0.55 }}
-                      className={`text-[10px] font-black uppercase tracking-widest mt-0.5 ${cfg.textColor}`}
+                      transition={{ delay: 0.52 }}
+                      className={`text-xs font-black uppercase tracking-widest mt-1 ${cfg.textColor}`}
                     >
                       #{signedInfo.number} · {signedInfo.position}
                     </motion.p>
                   </div>
                 </div>
 
-                {/* Headline + team section */}
-                <div className="px-7 pt-5 pb-6 text-center">
+                {/* Info section */}
+                <div className="px-6 md:px-8 pt-5 pb-7">
                   {/* SIGNED / GOAL headline */}
                   <motion.h1
-                    initial={{ opacity: 0, scale: 0.6 }}
+                    initial={{ opacity: 0, scale: 0.5 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.35, type: 'spring', stiffness: 220 }}
-                    className={`text-5xl md:text-6xl font-black italic tracking-tighter leading-none ${cfg.textColor} mb-1`}
+                    transition={{ delay: 0.3, type: 'spring', stiffness: 220 }}
+                    className={`text-6xl md:text-7xl font-black italic tracking-tighter text-center leading-none ${cfg.textColor} mb-1`}
                   >
                     {cfg.headline}
                   </motion.h1>
                   <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="text-[10px] font-black text-white/40 uppercase tracking-[0.25em] mb-5"
+                    transition={{ delay: 0.48 }}
+                    className="text-[11px] font-black text-white/40 uppercase tracking-[0.25em] text-center mb-5"
                   >
                     {cfg.sub}
                   </motion.p>
 
-                  {/* Team banner */}
+                  {/* Team + price row */}
                   <motion.div
-                    initial={{ opacity: 0, y: 16 }}
+                    initial={{ opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.65 }}
-                    className="flex items-center gap-4 bg-white/10 backdrop-blur-sm border border-white/15 rounded-2xl px-4 py-3"
+                    transition={{ delay: 0.6 }}
+                    className="flex items-center gap-3 bg-white/10 backdrop-blur-sm border border-white/15 rounded-2xl px-4 md:px-5 py-3 md:py-4"
                   >
                     {/* Team logo */}
-                    <div className="w-14 h-14 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0 overflow-hidden">
+                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0 overflow-hidden">
                       {signedInfo.teamLogo ? (
                         <img
                           src={signedInfo.teamLogo}
@@ -339,11 +333,22 @@ export default function AuctionInterface({ players, teams }: { players: any[], t
                         <span className="text-2xl">🏆</span>
                       )}
                     </div>
-                    <div className="text-left min-w-0">
+
+                    {/* Team name */}
+                    <div className="text-left min-w-0 flex-1">
                       <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">Signed to</p>
-                      <p className="text-lg font-black uppercase tracking-tighter leading-tight text-white truncate">
+                      <p className="text-base md:text-lg font-black uppercase tracking-tighter leading-tight text-white truncate">
                         {signedInfo.teamName}
                       </p>
+                    </div>
+
+                    {/* Price */}
+                    <div className={`shrink-0 px-3 py-2 rounded-xl text-xs md:text-sm font-black uppercase tracking-wide ${
+                      signedInfo.price === 0
+                        ? 'bg-amber-500 text-black'
+                        : `border ${cfg.border} ${cfg.textColor} bg-white/10`
+                    }`}>
+                      {signedInfo.price === 0 ? 'FREE 🧤' : `${signedInfo.price} pts`}
                     </div>
                   </motion.div>
                 </div>
