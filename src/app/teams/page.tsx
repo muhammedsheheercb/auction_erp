@@ -35,7 +35,7 @@ export default async function TeamsPage() {
             </h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
             {teams.map((team: any) => (
               <TeamCard key={team._id} team={team} isAdmin={isAdmin} />
             ))}

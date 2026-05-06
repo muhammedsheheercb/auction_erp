@@ -238,12 +238,12 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
               <div className={`${cfg.animClass} relative bg-gradient-to-br ${cfg.bgFrom} ${cfg.bgTo} border-2 ${cfg.border} rounded-[3rem] overflow-hidden shadow-2xl ${cfg.glow} w-full`}>
                 <button
                   onClick={() => { setSignedInfo(null); setSearchNumber(''); }}
-                  className="absolute top-6 right-6 z-20 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all border border-white/10"
+                  className="absolute top-4 right-4 md:top-6 md:right-6 z-20 w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all border border-white/10"
                 >
-                  <X className="w-6 h-6 text-white" />
+                  <X className="w-5 h-5 md:w-6 md:h-6 text-white" />
                 </button>
 
-                <div className="relative h-64 md:h-80 w-full overflow-hidden">
+                <div className="relative h-56 md:h-80 w-full overflow-hidden">
                   <img
                     src={signedInfo.playerPhoto}
                     alt={signedInfo.name}
@@ -260,12 +260,12 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
                     {cfg.emoji}
                   </motion.span>
 
-                  <div className="absolute bottom-6 left-8 right-8">
+                  <div className="absolute bottom-4 left-6 right-6 md:bottom-6 md:left-8 md:right-8">
                     <motion.h2
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.4 }}
-                      className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter leading-none text-white"
+                      className="text-2xl md:text-5xl font-black uppercase italic tracking-tighter leading-none text-white"
                     >
                       {signedInfo.name}
                     </motion.h2>
@@ -273,19 +273,19 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.52 }}
-                      className={`text-xs font-black uppercase tracking-[0.2em] mt-2 ${cfg.textColor}`}
+                      className={`text-[10px] md:text-xs font-black uppercase tracking-[0.2em] mt-2 ${cfg.textColor}`}
                     >
                       #{signedInfo.number} · {signedInfo.position}
                     </motion.p>
                   </div>
                 </div>
 
-                <div className="px-8 pt-6 pb-10">
+                <div className="px-6 md:px-8 pt-4 md:pt-6 pb-8 md:pb-10">
                   <motion.h1
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.3 }}
-                    className={`text-5xl md:text-8xl font-black italic tracking-tighter text-center leading-none ${cfg.textColor} mb-2`}
+                    className={`text-4xl md:text-8xl font-black italic tracking-tighter text-center leading-none ${cfg.textColor} mb-2`}
                   >
                     {cfg.headline}
                   </motion.h1>
@@ -293,7 +293,7 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.48 }}
-                    className="text-xs font-black text-white/40 uppercase tracking-[0.3em] text-center mb-8"
+                    className="text-[9px] md:text-xs font-black text-white/40 uppercase tracking-[0.3em] text-center mb-6 md:mb-8"
                   >
                     {cfg.sub}
                   </motion.p>
@@ -302,22 +302,22 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 }}
-                    className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-[2rem] p-5"
+                    className="flex items-center gap-3 md:gap-4 bg-white/5 border border-white/10 rounded-2xl md:rounded-[2rem] p-4 md:p-5"
                   >
-                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
+                    <div className="w-10 h-10 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
                       {signedInfo.teamLogo ? (
                         <img src={signedInfo.teamLogo} alt="" className="w-full h-full object-contain p-2" />
                       ) : (
-                        <Trophy className="w-6 h-6 md:w-8 md:h-8 text-amber-500" />
+                        <Trophy className="w-5 h-5 md:w-8 md:h-8 text-amber-500" />
                       )}
                     </div>
 
-                    <div className="flex-1">
-                      <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Joining</p>
-                      <p className="text-xl font-black uppercase tracking-tighter text-white">{signedInfo.teamName}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[8px] md:text-[10px] font-black text-white/30 uppercase tracking-widest truncate">Joining</p>
+                      <p className="text-sm md:text-xl font-black uppercase tracking-tighter text-white truncate">{signedInfo.teamName}</p>
                     </div>
 
-                    <div className={`px-5 py-3 rounded-2xl text-base font-black uppercase tracking-wider ${
+                    <div className={`px-3 md:px-5 py-2 md:py-3 rounded-xl md:rounded-2xl text-[10px] md:text-base font-black uppercase tracking-wider shrink-0 ${
                       signedInfo.price === 0 ? 'bg-amber-500 text-black' : 'bg-white/10 text-white border border-white/10'
                     }`}>
                       {signedInfo.price === 0 ? 'FREE' : `${signedInfo.price} PTS`}
@@ -338,15 +338,15 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
           </div>
           <input
             type="number"
-            placeholder="ENTER SCOUT NUMBER (1 - 66)"
+            placeholder="ENTER SCOUT ID (1 - 80)"
             value={searchNumber}
             onChange={(e) => {
               const v = e.target.value;
               if (v === '') { setSearchNumber(''); return; }
               const n = parseInt(v);
-              if (!isNaN(n)) setSearchNumber(Math.max(1, Math.min(66, n)).toString());
+              if (!isNaN(n)) setSearchNumber(Math.max(1, Math.min(80, n)).toString());
             }}
-            className="w-full bg-[#0f172a] border-2 border-white/5 rounded-3xl pl-12 md:pl-16 pr-6 py-4 md:py-6 focus:outline-none focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10 transition-all text-xl md:text-3xl font-black uppercase tracking-widest placeholder:text-slate-600 shadow-2xl"
+            className="w-full bg-[#0f172a] border-2 border-white/5 rounded-3xl pl-12 md:pl-16 pr-6 py-4 md:py-6 focus:outline-none focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10 transition-all text-lg md:text-3xl font-black uppercase tracking-widest placeholder:text-slate-600 shadow-2xl"
           />
         </div>
       </div>
@@ -424,22 +424,22 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
                           <span className="text-amber-400 font-black text-[11px] uppercase tracking-[0.2em]">Mandatory GK — Free Signing</span>
                         </div>
                       )}
-                      <div className="flex items-center justify-between bg-white/5 border border-white/5 rounded-2xl p-6">
-                        <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                      <div className="flex flex-col sm:flex-row items-center justify-between bg-white/5 border border-white/5 rounded-2xl p-4 md:p-6 gap-4">
+                        <span className="text-[10px] md:text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">
                           {isGK ? 'COST' : 'CURRENT BID'}
                         </span>
-                        <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-4 md:gap-6">
                           <button
                             disabled={isGK}
                             onClick={() => {
                               const dec = currentBid > 2000 ? 500 : currentBid > 1000 ? 200 : 100;
                               setCurrentBid(p => Math.max(500, p - dec));
                             }}
-                            className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-rose-500/20 disabled:opacity-10 rounded-xl border border-white/10 transition-all active:scale-90"
+                            className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-white/5 hover:bg-rose-500/20 disabled:opacity-10 rounded-lg md:rounded-xl border border-white/10 transition-all active:scale-90"
                           >
-                            <Minus className="w-5 h-5" />
+                            <Minus className="w-4 h-4 md:w-5 md:h-5" />
                           </button>
-                          <span className={`text-3xl md:text-5xl font-black italic tabular-nums w-20 md:w-28 text-center ${isGK ? 'text-amber-400' : 'text-white'}`}>
+                          <span className={`text-2xl md:text-5xl font-black italic tabular-nums w-16 md:w-28 text-center ${isGK ? 'text-amber-400' : 'text-white'}`}>
                             {isGK ? '0' : currentBid}
                           </span>
                           <button
@@ -449,9 +449,9 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
                               const max = Math.max(...teams.map(calculateMaxBid));
                               setCurrentBid(p => Math.min(p + inc, max));
                             }}
-                            className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-emerald-500/20 disabled:opacity-10 rounded-xl border border-white/10 transition-all active:scale-90"
+                            className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-white/5 hover:bg-emerald-500/20 disabled:opacity-10 rounded-lg md:rounded-xl border border-white/10 transition-all active:scale-90"
                           >
-                            <Plus className="w-5 h-5" />
+                            <Plus className="w-4 h-4 md:w-5 md:h-5" />
                           </button>
                         </div>
                       </div>
@@ -503,7 +503,7 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-6">
             {teams
               .filter(team => {
                 if (!selectedPlayer || selectedPlayer.status !== 'available') return true;

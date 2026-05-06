@@ -71,19 +71,19 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 1 }}
-            className="mx-auto mt-16 grid grid-cols-2 sm:flex max-w-2xl divide-x-0 sm:divide-x divide-white/10 rounded-3xl border border-white/5 bg-white/3 p-6 backdrop-blur-xl gap-6 sm:gap-0"
+            className="mx-auto mt-12 md:mt-16 grid grid-cols-2 sm:flex max-w-2xl divide-white/10 rounded-2xl md:rounded-3xl border border-white/5 bg-white/3 p-4 md:p-6 backdrop-blur-xl gap-4 sm:gap-0"
           >
-            <div className="flex-1 px-4 border-r border-white/10 sm:border-r-0">
-              <div className="text-2xl md:text-3xl font-black text-white">66</div>
-              <div className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-amber-500/80">Athletes</div>
+            <div className="flex-1 px-2 md:px-4 border-r border-white/10">
+              <div className="text-xl md:text-3xl font-black text-white">80</div>
+              <div className="text-[9px] md:text-xs font-bold uppercase tracking-widest text-amber-500/80">Athletes</div>
             </div>
-            <div className="flex-1 px-4">
-              <div className="text-2xl md:text-3xl font-black text-white">10</div>
-              <div className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-emerald-500/80">Franchises</div>
+            <div className="flex-1 px-2 md:px-4 sm:border-r sm:border-white/10">
+              <div className="text-xl md:text-3xl font-black text-white">10</div>
+              <div className="text-[9px] md:text-xs font-bold uppercase tracking-widest text-emerald-500/80">Franchises</div>
             </div>
-            <div className="flex-1 px-4 col-span-2 sm:col-span-1 border-t border-white/10 pt-4 sm:border-t-0 sm:pt-0">
-              <div className="text-2xl md:text-3xl font-black gradient-text">20,000+</div>
-              <div className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-400">Points Cap</div>
+            <div className="flex-1 px-2 md:px-4 col-span-2 sm:col-span-1 border-t border-white/10 pt-4 sm:border-t-0 sm:pt-0">
+              <div className="text-xl md:text-3xl font-black gradient-text">25,000+</div>
+              <div className="text-[9px] md:text-xs font-bold uppercase tracking-widest text-slate-400">Points Cap</div>
             </div>
           </motion.div>
         </motion.div>

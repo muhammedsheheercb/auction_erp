@@ -39,29 +39,29 @@ export default function ConfirmModal({
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            className={`relative glass max-w-md w-full rounded-[3rem] border border-white/10 overflow-hidden shadow-2xl ${
+            className={`relative glass max-w-md w-full rounded-[2.5rem] md:rounded-[3rem] border border-white/10 overflow-hidden shadow-2xl ${
               isDanger ? 'shadow-rose-500/10' : 'shadow-amber-500/10'
             }`}
           >
             <div className="p-6 md:p-10 text-center">
-              <div className={`w-16 h-16 md:w-20 md:h-20 rounded-[1.5rem] md:rounded-[2rem] flex items-center justify-center mx-auto mb-6 border ${
+              <div className={`w-12 h-12 md:w-20 md:h-20 rounded-2xl md:rounded-[2rem] flex items-center justify-center mx-auto mb-4 md:mb-6 border ${
                 isDanger ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' : 'bg-amber-500/10 border-amber-500/20 text-amber-500'
               }`}>
-                {isDanger ? <AlertTriangle className="w-8 h-8 md:w-10 md:h-10" /> : <ShieldAlert className="w-8 h-8 md:w-10 md:h-10" />}
+                {isDanger ? <AlertTriangle className="w-6 h-6 md:w-10 md:h-10" /> : <ShieldAlert className="w-6 h-6 md:w-10 md:h-10" />}
               </div>
               
-              <h3 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter mb-3 text-white leading-none px-4">
+              <h3 className="text-xl md:text-3xl font-black uppercase italic tracking-tighter mb-2 md:mb-3 text-white leading-none px-2">
                 {title}
               </h3>
               
-              <p className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 mb-8 md:mb-10 leading-relaxed max-w-[90%] md:max-w-[80%] mx-auto">
+              <p className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 mb-6 md:mb-10 leading-relaxed max-w-[95%] md:max-w-[80%] mx-auto">
                 {message}
               </p>
               
               <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
                 <button
                   onClick={onClose}
-                  className="flex-1 px-8 py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-white transition-all active:scale-95 order-2 sm:order-1"
+                  className="flex-1 px-6 py-3.5 md:px-8 md:py-4 rounded-xl md:rounded-2xl font-black uppercase tracking-[0.2em] text-[9px] md:text-[10px] bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-white transition-all active:scale-95 order-2 sm:order-1"
                 >
                   {cancelText}
                 </button>
@@ -70,7 +70,7 @@ export default function ConfirmModal({
                     onConfirm();
                     onClose();
                   }}
-                  className={`flex-1 px-8 py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] text-black transition-all active:scale-95 shadow-2xl order-1 sm:order-2 ${
+                  className={`flex-1 px-6 py-3.5 md:px-8 md:py-4 rounded-xl md:rounded-2xl font-black uppercase tracking-[0.2em] text-[9px] md:text-[10px] text-black transition-all active:scale-95 shadow-2xl order-1 sm:order-2 ${
                     isDanger ? 'bg-rose-500 hover:bg-rose-400 shadow-rose-500/20' : 'bg-amber-500 hover:bg-amber-400 shadow-amber-500/20'
                   }`}
                 >

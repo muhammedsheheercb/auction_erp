@@ -72,7 +72,7 @@ export default function TeamForm() {
           </button>
         </div>
 
-        <div className="p-8 space-y-6">
+        <div className="p-6 md:p-8 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Franchise Name</label>

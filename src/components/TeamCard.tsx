@@ -41,41 +41,85 @@ export default function TeamCard({ team, isAdmin }: TeamCardProps) {
     }
   };
 
-  const downloadPDF = (e: React.MouseEvent) => {
+  const downloadPDF = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const doc = new jsPDF();
     
+    const getBase64Image = (url: string): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0);
+          try { resolve(canvas.toDataURL('image/jpeg', 0.8)); } catch (e) { reject(e); }
+        };
+        img.onerror = () => reject();
+        img.src = url;
+      });
+    };
+
+    // Header Area
+    doc.setFillColor(2, 6, 23); // Deep Midnight
+    doc.rect(0, 0, 210, 45, 'F');
+
     doc.setFontSize(22);
     doc.setTextColor(234, 179, 8); // Amber-500
+    doc.setFont('helvetica', 'bold');
     doc.text('CHELEOR SUPER LEAGUE S7', 105, 20, { align: 'center' });
     
     doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255);
+    doc.text(`Official Squad: ${team.name.toUpperCase()}`, 105, 32, { align: 'center' });
+    
+    // Team Info Section
+    doc.setFontSize(10);
     doc.setTextColor(0, 0, 0);
-    doc.text(`Official Squad: ${team.name.toUpperCase()}`, 105, 35, { align: 'center' });
+    doc.setFont('helvetica', 'bold');
+    doc.text(`LEAD MANAGER: ${team.manager1.toUpperCase()}`, 20, 55);
+    doc.text(`CO-MANAGER: ${team.manager2.toUpperCase()}`, 20, 62);
     
-    doc.setFontSize(12);
-    doc.text(`Lead Manager: ${team.manager1}`, 20, 50);
-    doc.text(`Co-Manager: ${team.manager2}`, 20, 58);
-    doc.text(`Available Points: ${team.remainingBudget}`, 140, 50);
-    doc.text(`Roster Count: ${team.players.length}/10`, 140, 58);
-    
-    const tableData = team.players.map((p: any) => [
-      p.number,
-      p.name,
-      p.position,
-      p.soldPrice === 0 ? 'FREE' : p.soldPrice
-    ]);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`POINTS REMAINING: ${team.remainingBudget} PTS`, 190, 55, { align: 'right' });
+    doc.text(`ROSTER STATUS: ${team.players.length}/10 PLAYERS`, 190, 62, { align: 'right' });
+
+    // Prepare Table Data with Images
+    const tableData = await Promise.all(team.players.map(async (p: any) => {
+      let imgData = '';
+      try { imgData = await getBase64Image(p.photo); } catch (e) {}
+      return {
+        number: `#${p.number}`,
+        name: p.name.toUpperCase(),
+        position: p.position.toUpperCase(),
+        price: p.soldPrice === 0 ? 'FREE' : `${p.soldPrice} PTS`,
+        photo: imgData
+      };
+    }));
 
     autoTable(doc, {
-      startY: 70,
-      head: [['#', 'Player Name', 'Position', 'Price']],
-      body: tableData,
-      theme: 'grid',
-      headStyles: { fillColor: [234, 179, 8] },
-      styles: { fontStyle: 'bold' }
+      startY: 75,
+      head: [['PHOTO', 'ID', 'PLAYER NAME', 'POSITION', 'BID PRICE']],
+      body: tableData.map(p => ['', p.number, p.name, p.position, p.price]),
+      theme: 'striped',
+      headStyles: { fillColor: [234, 179, 8], textColor: [0, 0, 0], fontStyle: 'bold', halign: 'center' },
+      bodyStyles: { minCellHeight: 25, valign: 'middle', fontSize: 10, fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { halign: 'center', cellWidth: 15 },
+        3: { halign: 'center' },
+        4: { halign: 'right' }
+      },
+      didDrawCell: (data) => {
+        if (data.section === 'body' && data.column.index === 0 && tableData[data.row.index].photo) {
+          doc.addImage(tableData[data.row.index].photo, 'JPEG', data.cell.x + 2, data.cell.y + 2, 21, 21);
+        }
+      }
     });
 
-    doc.save(`${team.name.replace(/\s+/g, '_')}_squad.pdf`);
+    doc.save(`${team.name.replace(/\s+/g, '_')}_official_squad.pdf`);
   };
 
   const handleEditSubmit = async (formData: FormData) => {
@@ -123,11 +167,11 @@ export default function TeamCard({ team, isAdmin }: TeamCardProps) {
               exit={{ scale: 0.95, opacity: 0 }}
               className="relative glass max-w-md w-full rounded-[3rem] border border-white/10 overflow-hidden"
             >
-              <form action={handleEditSubmit} className="p-10 space-y-6">
+              <form action={handleEditSubmit} className="p-6 md:p-10 space-y-6">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-2xl font-black uppercase italic tracking-tighter">Edit Franchise</h3>
-                  <button type="button" onClick={handleEditClose} className="p-3 hover:bg-white/5 rounded-full transition-all">
-                    <X className="w-6 h-6" />
+                  <h3 className="text-xl md:text-2xl font-black uppercase italic tracking-tighter">Edit Franchise</h3>
+                  <button type="button" onClick={handleEditClose} className="p-2 md:p-3 hover:bg-white/5 rounded-full transition-all">
+                    <X className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
                 </div>
                 
@@ -142,7 +186,7 @@ export default function TeamCard({ team, isAdmin }: TeamCardProps) {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Manager 1</label>
                       <input
@@ -283,34 +327,34 @@ export default function TeamCard({ team, isAdmin }: TeamCardProps) {
               exit={{ scale: 0.95, opacity: 0 }}
               className="relative glass max-w-2xl w-full max-h-[85vh] overflow-hidden rounded-[3rem] border border-white/10 flex flex-col shadow-2xl"
             >
-              <div className="p-10 border-b border-white/5 flex justify-between items-center bg-white/3">
-                <div className="flex items-center gap-6">
-                  <div className="w-20 h-20 rounded-[2rem] bg-white/5 flex items-center justify-center border border-white/10 p-3">
+              <div className="p-6 md:p-10 border-b border-white/5 flex justify-between items-center bg-white/3">
+                <div className="flex items-center gap-4 md:gap-6">
+                  <div className="w-14 h-14 md:w-20 md:h-20 rounded-2xl md:rounded-[2rem] bg-white/5 flex items-center justify-center border border-white/10 p-2 md:p-3">
                     {team.logo ? (
                       <img src={team.logo} className="w-full h-full object-contain" alt="" />
                     ) : (
-                      <Trophy className="w-10 h-10 text-amber-500" />
+                      <Trophy className="w-8 h-8 md:w-10 md:h-10 text-amber-500" />
                     )}
                   </div>
                   <div>
-                    <h2 className="text-4xl font-black uppercase italic tracking-tighter text-white leading-none">{team.name}</h2>
-                    <p className="text-[11px] font-black uppercase tracking-[0.3em] text-amber-500 mt-2">Elite Franchise Profile</p>
+                    <h2 className="text-2xl md:text-4xl font-black uppercase italic tracking-tighter text-white leading-none">{team.name}</h2>
+                    <p className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.3em] text-amber-500 mt-2">Elite Franchise Profile</p>
                   </div>
                 </div>
-                <button onClick={() => setShowDetails(false)} className="p-4 bg-white/5 rounded-full hover:bg-white/10 transition-all active:scale-90">
-                  <X className="w-8 h-8" />
+                <button onClick={() => setShowDetails(false)} className="p-3 md:p-4 bg-white/5 rounded-full hover:bg-white/10 transition-all active:scale-90">
+                  <X className="w-6 h-6 md:w-8 md:h-8" />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-10">
-                <div className="grid grid-cols-2 gap-6 mb-10">
-                  <div className="bg-white/3 p-6 rounded-[2rem] border border-white/5">
-                    <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-2">Managerial Team</p>
-                    <p className="text-lg font-black italic">{team.manager1} & {team.manager2}</p>
+              <div className="flex-1 overflow-y-auto p-6 md:p-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-8 md:mb-10">
+                  <div className="bg-white/3 p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border border-white/5">
+                    <p className="text-[9px] md:text-[10px] text-slate-500 uppercase font-black tracking-widest mb-2">Managerial Team</p>
+                    <p className="text-base md:text-lg font-black italic">{team.manager1} & {team.manager2}</p>
                   </div>
-                  <div className="bg-white/3 p-6 rounded-[2rem] border border-white/5">
-                    <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-2">Franchise Budget</p>
-                    <p className="text-lg font-black italic text-emerald-400">{team.remainingBudget} PTS</p>
+                  <div className="bg-white/3 p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border border-white/5">
+                    <p className="text-[9px] md:text-[10px] text-slate-500 uppercase font-black tracking-widest mb-2">Franchise Budget</p>
+                    <p className="text-base md:text-lg font-black italic text-emerald-400">{team.remainingBudget} PTS</p>
                   </div>
                 </div>
 
@@ -354,12 +398,12 @@ export default function TeamCard({ team, isAdmin }: TeamCardProps) {
                 </div>
               </div>
 
-              <div className="p-10 bg-white/3 border-t border-white/5">
+              <div className="p-6 md:p-10 bg-white/3 border-t border-white/5">
                 <button 
                   onClick={downloadPDF}
-                  className="btn-primary w-full py-5 rounded-2xl flex items-center justify-center gap-3"
+                  className="btn-primary w-full py-4 md:py-5 rounded-2xl flex items-center justify-center gap-3 text-[10px] md:text-[11px] font-black uppercase tracking-widest"
                 >
-                  <Download className="w-6 h-6" />
+                  <Download className="w-5 h-5 md:w-6 md:h-6" />
                   Generate Squad Report (PDF)
                 </button>
               </div>

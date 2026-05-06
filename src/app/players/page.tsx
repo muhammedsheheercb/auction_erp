@@ -3,6 +3,7 @@ import PlayerForm from '@/components/PlayerForm';
 import PlayerCard from '@/components/PlayerCard';
 import { Users } from 'lucide-react';
 import { isAdmin as checkAdmin } from '@/lib/auth';
+import PlayerDownloadButton from '@/components/PlayerDownloadButton';
 
 export default async function PlayersPage() {
   const players = await getPlayers();
@@ -29,14 +30,15 @@ export default async function PlayersPage() {
         </div>
         
         <div className="flex-1">
-          <div className="flex items-center justify-between mb-10 px-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 px-2 gap-4">
             <h2 className="text-xl md:text-2xl font-black uppercase tracking-tighter italic flex items-center gap-3 text-white">
               <Users className="w-8 h-8 text-emerald-500" />
-              Draft Registry ({players.length}/66)
+              Draft Registry ({players.length}/80)
             </h2>
+            <PlayerDownloadButton players={players} />
           </div>
           
-          <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
             {players.map((player: any) => (
               <PlayerCard key={player._id} player={player} isAdmin={isAdmin} />
             ))}

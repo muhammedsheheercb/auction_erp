@@ -47,7 +47,7 @@ export default function PlayerForm({ nextNumber }: { nextNumber: number }) {
         </div>
 
         {/* Position + Number */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">
               Primary Position
