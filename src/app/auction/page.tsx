@@ -11,7 +11,7 @@ export default async function AuctionPage() {
   return (
     <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
       <div className="flex flex-col items-center text-center mb-16 md:mb-24">
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-rose-500/10 border border-rose-500/20 rounded-full mb-6">
+        <div className="inline-flex mt-10 items-center gap-2 px-3 py-1 bg-rose-500/10 border border-rose-500/20 rounded-full mb-6">
           <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
           <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em]">Live Session Active</span>
         </div>
@@ -22,7 +22,7 @@ export default async function AuctionPage() {
           Cheleer Super League Season 7 Draft Room
         </p>
       </div>
-      
+
       <AuctionInterface players={players} teams={teams} isAdmin={isAdmin} />
     </div>
   );

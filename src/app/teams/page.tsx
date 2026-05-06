@@ -12,7 +12,7 @@ export default async function TeamsPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
       <div className="flex flex-col lg:flex-row gap-12 md:gap-16">
         <div className="w-full lg:w-[400px] shrink-0">
-          <div className="lg:sticky lg:top-32">
+          <div className="lg:sticky mt-16 lg:top-32">
             <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase leading-none mb-4">Franchise<br /><span className="text-emerald-500">Center</span></h1>
             <p className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] mb-10">Authorize and manage Season 7 participants</p>
             {isAdmin ? (
@@ -26,15 +26,15 @@ export default async function TeamsPage() {
             )}
           </div>
         </div>
-        
+
         <div className="flex-1">
-          <div className="flex items-center justify-between mb-10 px-2">
+          <div className="flex items-center justify-between mt-0 lg:mt-10 mb-10 px-2">
             <h2 className="text-xl md:text-2xl font-black uppercase tracking-tighter italic flex items-center gap-3">
               <Trophy className="w-8 h-8 text-amber-500" />
               Authorized Franchises ({teams.length})
             </h2>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
             {teams.map((team: any) => (
               <TeamCard key={team._id} team={team} isAdmin={isAdmin} />
