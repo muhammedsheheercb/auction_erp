@@ -34,13 +34,18 @@ export default function PlayerDownloadButton({ players }: { players: any[] }) {
     try {
       const doc = new jsPDF('p', 'mm', 'a4');
 
-      const drawPageHeader = (title: string) => {
+      const drawPageHeader = async (title: string) => {
         doc.setFillColor(2, 6, 23); // Deep Midnight
         doc.rect(0, 0, 210, 297, 'F');
         
         doc.setDrawColor(251, 191, 36);
         doc.setLineWidth(0.5);
         doc.line(10, 15, 200, 15);
+
+        try {
+          const logoData = await getBase64Image('/images/logo.webp');
+          doc.addImage(logoData, 'JPEG', 10, 5, 10, 10);
+        } catch (e) {}
 
         doc.setFontSize(20);
         doc.setTextColor(255, 255, 255);
@@ -85,7 +90,7 @@ export default function PlayerDownloadButton({ players }: { players: any[] }) {
         if (isNewPosition || pageIndex === 0) {
           if (i > 0) doc.addPage();
           currentPosition = p.position;
-          drawPageHeader(p.position);
+          await drawPageHeader(p.position);
           x = marginX;
           y = marginY;
         } else if (pageIndex % 3 === 0) {

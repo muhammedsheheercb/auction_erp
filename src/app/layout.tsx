@@ -24,6 +24,10 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "CSL Draft 2026 | Cheloor Super League",
   description: "Official Player Auction & Draft System for Cheloor Super League Season 7",
+  icons: {
+    icon: "/images/logo.webp",
+    apple: "/images/logo.webp",
+  },
 };
 
 import { isAdmin as checkAdmin } from "@/lib/auth";

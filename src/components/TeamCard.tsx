@@ -66,6 +66,11 @@ export default function TeamCard({ team, isAdmin }: TeamCardProps) {
     doc.setFillColor(2, 6, 23); // Deep Midnight
     doc.rect(0, 0, 210, 45, 'F');
 
+    try {
+      const logoData = await getBase64Image('/images/logo.webp');
+      doc.addImage(logoData, 'JPEG', 15, 8, 15, 15);
+    } catch (e) {}
+
     doc.setFontSize(22);
     doc.setTextColor(234, 179, 8); // Amber-500
     doc.setFont('helvetica', 'bold');
