@@ -34,92 +34,104 @@ export default function PlayerDownloadButton({ players }: { players: any[] }) {
     try {
       const doc = new jsPDF('p', 'mm', 'a4');
 
-      const drawPageHeader = async (title: string) => {
-        doc.setFillColor(2, 6, 23); // Deep Midnight
+      const drawPageHeader = async () => {
+        doc.setFillColor(2, 6, 23);
         doc.rect(0, 0, 210, 297, 'F');
-        
+
         doc.setDrawColor(251, 191, 36);
         doc.setLineWidth(0.5);
-        doc.line(10, 15, 200, 15);
+        doc.line(10, 14, 200, 14);
 
         try {
           const logoData = await getBase64Image('/images/logo.webp');
-          doc.addImage(logoData, 'JPEG', 10, 5, 10, 10);
+          doc.addImage(logoData, 'JPEG', 10, 4, 9, 9);
         } catch (e) {}
 
-        doc.setFontSize(20);
+        doc.setFontSize(15);
         doc.setTextColor(255, 255, 255);
         doc.setFont('helvetica', 'bold');
-        doc.text('CHELEOR SUPER LEAGUE S7', 105, 12, { align: 'center' });
-        
-        doc.setFontSize(12);
-        doc.setTextColor(251, 191, 36);
-        doc.text(`${title.toUpperCase()} REGISTRY`, 105, 22, { align: 'center' });
+        doc.text('CHELEOR SUPER LEAGUE S7', 105, 11, { align: 'center' });
 
-        doc.setDrawColor(255, 255, 255, 0.1);
-        doc.line(10, 26, 200, 26);
+        doc.setDrawColor(30, 41, 59);
+        doc.setLineWidth(0.3);
+        doc.line(10, 17, 200, 17);
       };
 
-      const positionOrder: Record<string, number> = { 'GK': 1, 'Forward': 2, 'Midfielder': 3, 'Defender': 4 };
-      const sortedPlayers = players
-        .filter(p => p.position !== 'Goalkeeper')
-        .sort((a, b) => {
-          const orderA = positionOrder[a.position] || 99;
-          const orderB = positionOrder[b.position] || 99;
-          if (orderA !== orderB) return orderA - orderB;
-          return a.number - b.number;
-        });
+      // 4 cols × 4 rows = 16 per page
+      const cols = 4;
+      const marginX = 9;
+      const marginY = 20;
+      const gapX = 4;
+      const gapY = 4;
+      const cardWidth = (210 - 2 * marginX - (cols - 1) * gapX) / cols; // 45mm
+      const cardHeight = 56;
+      const cardsPerPage = cols * 4;
 
-      const cardsPerPage = 12;
-      const cardWidth = 60; 
-      const cardHeight = 62;
-      const marginX = 10;
-      const marginY = 32;
-      const gapX = 5;
-      const gapY = 5;
-      
-      let x = marginX;
-      let y = marginY;
-      let currentSection = '';
+      const positionGroups: Array<{ key: string; label: string }> = [
+        { key: 'Forward',    label: 'FORWARDS'     },
+        { key: 'Midfielder', label: 'MIDFIELDERS'  },
+        { key: 'Defender',   label: 'DEFENDERS'    },
+        { key: 'GK',         label: 'GOALKEEPERS'  },
+      ];
 
-      for (let i = 0; i < sortedPlayers.length; i++) {
-        const p = sortedPlayers[i];
-        const pageIndex = i % cardsPerPage;
-        
-        const isNewSection = p.position !== currentSection;
-        if (isNewSection || pageIndex === 0) {
-          if (i > 0) doc.addPage();
-          currentSection = p.position;
-          await drawPageHeader(p.position);
-          x = marginX;
-          y = marginY;
-        } else if (pageIndex % 3 === 0) {
-          x = marginX;
-          y += cardHeight + gapY;
-        } else {
-          x += cardWidth + gapX;
+      let isFirstPage = true;
+
+      for (const { key, label } of positionGroups) {
+        const group = players.filter(p => p.position === key);
+        if (group.length === 0) continue;
+
+        for (let i = 0; i < group.length; i++) {
+          const pageIndex = i % cardsPerPage;
+          const col = pageIndex % cols;
+          const row = Math.floor(pageIndex / cols);
+
+          if (pageIndex === 0) {
+            if (!isFirstPage) doc.addPage();
+            isFirstPage = false;
+            await drawPageHeader();
+          }
+
+          const x = marginX + col * (cardWidth + gapX);
+          const y = marginY + row * (cardHeight + gapY);
+
+          try {
+            const imgData = await getBase64Image(group[i].photo);
+            doc.addImage(imgData, 'JPEG', x, y, cardWidth, cardHeight);
+          } catch (e) {
+            doc.setFillColor(30, 41, 59);
+            doc.roundedRect(x, y, cardWidth, cardHeight, 2, 2, 'F');
+          }
+
+          // Scout ID badge
+          doc.setFillColor(251, 191, 36);
+          doc.roundedRect(x + cardWidth - 9, y + 2, 7, 4.5, 1, 1, 'F');
+          doc.setTextColor(0, 0, 0);
+          doc.setFontSize(6);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${group[i].number}`, x + cardWidth - 5.5, y + 5, { align: 'center' });
         }
 
-        // --- Minimalist Image-Only Card ---
-        try {
-          const imgData = await getBase64Image(p.photo);
-          // Draw the full image as the card
-          doc.addImage(imgData, 'JPEG', x, y, cardWidth, cardHeight);
-        } catch (e) {
-          doc.setFillColor(30, 41, 59);
-          doc.roundedRect(x, y, cardWidth, cardHeight, 2, 2, 'F');
-        }
+        // Position label below the last row on the last page of this group
+        const lastPageIndex = (group.length - 1) % cardsPerPage;
+        const lastRow = Math.floor(lastPageIndex / cols);
+        const labelY = marginY + (lastRow + 1) * (cardHeight + gapY) + 3;
 
-        // Overlay Scout ID on the top-right
-        doc.setFillColor(251, 191, 36);
-        doc.roundedRect(x + cardWidth - 10, y + 2, 8, 5, 1, 1, 'F');
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(7);
+        doc.setDrawColor(251, 191, 36);
+        doc.setLineWidth(0.4);
+        doc.line(marginX, labelY, 210 - marginX, labelY);
+
+        doc.setFontSize(10);
+        doc.setTextColor(251, 191, 36);
         doc.setFont('helvetica', 'bold');
-        doc.text(`${p.number}`, x + cardWidth - 6, y + 5.5, { align: 'center' });
+        doc.text(
+          `${label}  —  ${group.length} PLAYER${group.length !== 1 ? 'S' : ''}`,
+          105,
+          labelY + 6,
+          { align: 'center' }
+        );
       }
 
-      doc.save(`CSL_S7_Professional_Registry.pdf`);
+      doc.save('CSL_S7_Professional_Registry.pdf');
     } catch (err) {
       console.error(err);
       alert('Failed to generate professional PDF.');
