@@ -60,12 +60,13 @@ export default function PlayerDownloadButton({ players }: { players: any[] }) {
         doc.line(10, 26, 200, 26);
       };
 
-      const positionOrder: Record<string, number> = { 'Goalkeeper': 1, 'GK': 1, 'Forward': 2, 'Midfielder': 3, 'Defender': 4 };
-      const filteredPlayers = players
+      const positionOrder: Record<string, number> = { 'GK': 1, 'Forward': 2, 'Midfielder': 3, 'Defender': 4 };
+      const sortedPlayers = players
+        .filter(p => p.position !== 'Goalkeeper')
         .sort((a, b) => {
-          if (positionOrder[a.position] !== positionOrder[b.position]) {
-            return positionOrder[a.position] - positionOrder[b.position];
-          }
+          const orderA = positionOrder[a.position] || 99;
+          const orderB = positionOrder[b.position] || 99;
+          if (orderA !== orderB) return orderA - orderB;
           return a.number - b.number;
         });
 
@@ -79,16 +80,16 @@ export default function PlayerDownloadButton({ players }: { players: any[] }) {
       
       let x = marginX;
       let y = marginY;
-      let currentPosition = '';
+      let currentSection = '';
 
-      for (let i = 0; i < filteredPlayers.length; i++) {
-        const p = filteredPlayers[i];
+      for (let i = 0; i < sortedPlayers.length; i++) {
+        const p = sortedPlayers[i];
         const pageIndex = i % cardsPerPage;
         
-        const isNewPosition = p.position !== currentPosition;
-        if (isNewPosition || pageIndex === 0) {
+        const isNewSection = p.position !== currentSection;
+        if (isNewSection || pageIndex === 0) {
           if (i > 0) doc.addPage();
-          currentPosition = p.position;
+          currentSection = p.position;
           await drawPageHeader(p.position);
           x = marginX;
           y = marginY;
@@ -99,60 +100,23 @@ export default function PlayerDownloadButton({ players }: { players: any[] }) {
           x += cardWidth + gapX;
         }
 
-        // --- Professional High-End Card ---
-        // Shadow/Border
-        doc.setFillColor(30, 41, 59); // slate-800
-        doc.roundedRect(x, y, cardWidth, cardHeight, 3, 3, 'F');
-        doc.setDrawColor(251, 191, 36, 0.1);
-        doc.roundedRect(x, y, cardWidth, cardHeight, 3, 3, 'D');
-
-        // Top Accent Strip
-        const posColor = p.position === 'Forward' ? [239, 68, 68] : p.position === 'Midfielder' ? [168, 85, 247] : [59, 130, 246];
-        doc.setFillColor(posColor[0], posColor[1], posColor[2]);
-        doc.rect(x + 3, y, 15, 1.5, 'F');
-
-        // Image Section (Left)
+        // --- Minimalist Image-Only Card ---
         try {
           const imgData = await getBase64Image(p.photo);
-          doc.addImage(imgData, 'JPEG', x + 3, y + 6, 25, 35);
+          // Draw the full image as the card
+          doc.addImage(imgData, 'JPEG', x, y, cardWidth, cardHeight);
         } catch (e) {
-          doc.setFillColor(15, 23, 42);
-          doc.rect(x + 3, y + 6, 25, 35, 'F');
+          doc.setFillColor(30, 41, 59);
+          doc.roundedRect(x, y, cardWidth, cardHeight, 2, 2, 'F');
         }
 
-        // Scout ID (Badge Style)
+        // Overlay Scout ID on the top-right
         doc.setFillColor(251, 191, 36);
-        doc.roundedRect(x + cardWidth - 12, y + 3, 9, 6, 1, 1, 'F');
+        doc.roundedRect(x + cardWidth - 10, y + 2, 8, 5, 1, 1, 'F');
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(7);
         doc.setFont('helvetica', 'bold');
-        doc.text(`${p.number}`, x + cardWidth - 7.5, y + 7.2, { align: 'center' });
-
-        // Details Section (Right)
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(9);
-        const nameLines = doc.splitTextToSize(p.name.toUpperCase(), cardWidth - 32);
-        doc.text(nameLines, x + 30, y + 15);
-
-        doc.setFontSize(6);
-        doc.setTextColor(148, 163, 184);
-        doc.text('POSITION', x + 30, y + 22);
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(7);
-        doc.text(p.position.toUpperCase(), x + 30, y + 25);
-
-        // Footer Bar
-        doc.setFillColor(15, 23, 42);
-        doc.roundedRect(x + 2, y + cardHeight - 12, cardWidth - 4, 10, 1.5, 1.5, 'F');
-        
-        doc.setTextColor(251, 191, 36);
-        doc.setFontSize(8);
-        doc.text('★★★★★', x + 6, y + cardHeight - 5.5);
-        
-        doc.setTextColor(100, 116, 139);
-        doc.setFontSize(5);
-        doc.text('CSL SEASON 7', x + cardWidth - 6, y + cardHeight - 7, { align: 'right' });
-        doc.text('OFFICIAL REGISTRY', x + cardWidth - 6, y + cardHeight - 4, { align: 'right' });
+        doc.text(`${p.number}`, x + cardWidth - 6, y + 5.5, { align: 'center' });
       }
 
       doc.save(`CSL_S7_Professional_Registry.pdf`);

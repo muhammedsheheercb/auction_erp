@@ -108,20 +108,28 @@ export async function sellPlayer(playerId: string, teamId: string, price: number
 
   const isGoalkeeper = player.position === 'Goalkeeper';
 
-  // All signings are now paid: check budget and minimum-reserve rule.
+  // Paid signings: check budget and minimum-reserve rule.
+  // 'Goalkeeper' is free and does NOT count toward the mandatory 8-player minimum.
+  // 'GK' is a normal paid position.
   if (price > 0) {
     if (team.remainingBudget < price) throw new Error('Insufficient budget');
     const paidCount = await Player.countDocuments({
-      _id: { $in: team.players }
+      _id: { $in: team.players },
+      position: { $ne: 'Goalkeeper' },
     });
     const afterPaidBuy = paidCount + 1;
-    const stillRequired = Math.max(0, 9 - afterPaidBuy);
+    const stillRequired = Math.max(0, 8 - afterPaidBuy);
     const minimumReserved = stillRequired * 500;
     if (team.remainingBudget - price < minimumReserved) {
       throw new Error(
         `Cannot bid more than ${team.remainingBudget - minimumReserved}. Must reserve 500 per mandatory slot remaining.`
       );
     }
+  }
+
+  // 'Goalkeeper' position is free — validate price is 0
+  if (player.position === 'Goalkeeper' && price !== 0) {
+    throw new Error('Goalkeeper must be signed for free (price = 0).');
   }
 
   player.status = 'sold';

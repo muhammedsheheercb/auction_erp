@@ -129,26 +129,28 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
     return players.find(p => p.number === parseInt(searchNumber));
   }, [searchNumber, players]);
 
+  const isFreeGK = selectedPlayer?.position === 'Goalkeeper';
+  const isAuctionGK = selectedPlayer?.position === 'GK';
+  const isGK = isFreeGK || isAuctionGK;
+
   useEffect(() => {
     if (selectedPlayer?.status === 'available') {
-      setCurrentBid(500);
+      setCurrentBid(isFreeGK ? 0 : 500);
     }
-  }, [selectedPlayer?._id]);
-
-  const isGK = selectedPlayer?.position === 'Goalkeeper' || selectedPlayer?.position === 'GK';
+  }, [selectedPlayer?._id, isFreeGK]);
 
   const calculateMaxBid = (team: any) => {
     const slots = 9 - team.players.length;
     if (slots === 0) return 0;
-    const paidCount = team.players.length;
-    const afterPaidBuy = paidCount + 1;
-    const stillRequired = Math.max(0, 9 - afterPaidBuy);
+    const paidCount = team.players.filter((p: any) => p.position !== 'Goalkeeper').length;
+    const afterPaidBuy = paidCount + (isFreeGK ? 0 : 1);
+    const stillRequired = Math.max(0, 8 - afterPaidBuy);
     return team.remainingBudget - stillRequired * 500;
   };
 
   const handleSellClick = (team: any) => {
     if (!selectedPlayer) return;
-    const price = currentBid;
+    const price = isFreeGK ? 0 : currentBid;
     setPendingBid({ team, price });
     setShowBidConfirm(true);
   };
@@ -250,18 +252,18 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
               <div className={`${cfg.animClass} relative bg-gradient-to-br ${cfg.bgFrom} ${cfg.bgTo} border-2 ${cfg.border} rounded-[3rem] overflow-hidden shadow-2xl ${cfg.glow} w-full`}>
                 <button
                   onClick={() => { setSignedInfo(null); setSearchNumber(''); }}
-                  className="absolute top-4 right-4 md:top-6 md:right-6 z-20 w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all border border-white/10"
+                  className="absolute top-4 right-4 md:top-6 md:right-6 z-50 w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all border border-white/10"
                 >
                   <X className="w-5 h-5 md:w-6 md:h-6 text-white" />
                 </button>
 
-                <div className="relative h-56 md:h-80 w-full overflow-hidden">
+                <div className="relative h-52 md:h-[320px] w-full flex items-center justify-center bg-black/20">
                   <img
                     src={signedInfo.playerPhoto}
                     alt={signedInfo.name}
-                    className="w-full h-full object-cover object-top"
+                    className="max-w-full max-h-full object-contain object-center relative z-10"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent z-20" />
 
                     <motion.span
                     initial={{ scale: 0, rotate: -30 }}
@@ -430,18 +432,25 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
                 <div className="p-8 space-y-6">
                   {selectedPlayer.status === 'available' ? (
                     <>
-                      {isGK && (
+                      {isFreeGK && (
                         <div className="flex items-center justify-center gap-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl py-3 px-4">
                           <span className="text-xl">🧤</span>
-                          <span className="text-amber-400 font-black text-[11px] uppercase tracking-[0.2em]">Goalkeeper — Base 500</span>
+                          <span className="text-amber-400 font-black text-[11px] uppercase tracking-[0.2em]">Mandatory GK — Free Signing</span>
+                        </div>
+                      )}
+                      {isAuctionGK && (
+                        <div className="flex items-center justify-center gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl py-3 px-4">
+                          <span className="text-xl">🧤</span>
+                          <span className="text-emerald-400 font-black text-[11px] uppercase tracking-[0.2em]">GK Auction — Base 500</span>
                         </div>
                       )}
                       <div className="flex flex-col sm:flex-row items-center justify-between bg-white/5 border border-white/5 rounded-2xl p-4 md:p-6 gap-4">
                         <span className="text-[10px] md:text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">
-                          CURRENT BID
+                          {isFreeGK ? 'COST' : 'CURRENT BID'}
                         </span>
                         <div className="flex items-center gap-4 md:gap-6">
                           <button
+                            disabled={isFreeGK}
                             onClick={() => {
                               const dec = currentBid > 2000 ? 500 : currentBid > 1000 ? 200 : 100;
                               setCurrentBid(p => Math.max(500, p - dec));
@@ -450,10 +459,11 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
                           >
                             <Minus className="w-4 h-4 md:w-5 md:h-5" />
                           </button>
-                          <span className={`text-2xl md:text-5xl font-black italic tabular-nums w-16 md:w-28 text-center text-white`}>
-                            {currentBid}
+                          <span className={`text-2xl md:text-5xl font-black italic tabular-nums w-16 md:w-28 text-center ${isFreeGK ? 'text-amber-400' : 'text-white'}`}>
+                            {isFreeGK ? '0' : currentBid}
                           </span>
                           <button
+                            disabled={isFreeGK}
                             onClick={() => {
                               const inc = currentBid >= 2000 ? 500 : currentBid >= 1000 ? 200 : 100;
                               const max = Math.max(...teams.map(calculateMaxBid));
@@ -568,10 +578,10 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
 
                     <div className="bg-white/5 rounded-xl px-3 py-2 flex justify-between items-center mb-4 border border-white/5">
                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                        BID CAP
+                        {isFreeGK ? 'GK QUOTA' : 'BID CAP'}
                       </span>
-                      <span className={`text-base font-black italic tabular-nums text-amber-500`}>
-                        {maxBid}
+                      <span className={`text-base font-black italic tabular-nums ${isFreeGK ? 'text-amber-400' : 'text-amber-500'}`}>
+                        {isFreeGK ? 'SLOT OPEN' : maxBid}
                       </span>
                     </div>
 
@@ -587,7 +597,7 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
                             : 'bg-white/5 text-slate-600 border border-white/5 cursor-not-allowed'
                         }`}
                       >
-                        {isFull ? 'SQUAD FULL' : isSold ? 'SOLD' : 'PLACE BID'}
+                        {isFull ? 'SQUAD FULL' : isSold ? 'SOLD' : isFreeGK ? 'SIGN FREE' : 'PLACE BID'}
                       </button>
                     )}
                     {!isAdmin && (
