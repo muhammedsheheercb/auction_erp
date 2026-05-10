@@ -1,9 +1,6 @@
-import { put } from '@vercel/blob';
-
-export async function uploadFile(file: File, folder: string): Promise<string> {
-  const blob = await put(`${folder}/${file.name}`, file, {
-    access: 'public',
-    addRandomSuffix: true,
-  });
-  return blob.url;
+export async function uploadFile(file: File): Promise<string> {
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  const mimeType = file.type || 'image/webp';
+  return `data:${mimeType};base64,${buffer.toString('base64')}`;
 }

@@ -16,7 +16,7 @@ export async function createTeam(formData: FormData) {
 
   let logo = '';
   if (logoFile && logoFile.size > 0) {
-    logo = await uploadFile(logoFile, 'teams');
+    logo = await uploadFile(logoFile);
   } else {
     const fileName = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
     logo = `/images/teams/${fileName}.webp`;
@@ -51,7 +51,7 @@ export async function updateTeam(id: string, formData: FormData) {
   try {
     const updateData: any = { name, manager1, manager2 };
     if (logoFile && logoFile.size > 0) {
-      updateData.logo = await uploadFile(logoFile, 'teams');
+      updateData.logo = await uploadFile(logoFile);
     }
 
     await Team.findByIdAndUpdate(id, updateData);

@@ -16,7 +16,7 @@ export async function createPlayer(_prevState: { success?: boolean; error?: stri
 
   let photo = '';
   if (photoFile && photoFile.size > 0) {
-    photo = await uploadFile(photoFile, 'players');
+    photo = await uploadFile(photoFile);
   } else {
     photo = `/images/players/${number}.webp`;
   }
@@ -70,7 +70,7 @@ export async function updatePlayer(id: string, formData: FormData) {
   try {
     const updateData: any = { name, position, number };
     if (photoFile && photoFile.size > 0) {
-      updateData.photo = await uploadFile(photoFile, 'players');
+      updateData.photo = await uploadFile(photoFile);
     }
 
     await Player.findByIdAndUpdate(id, updateData);
