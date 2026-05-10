@@ -59,6 +59,7 @@ export default function PlayerForm({ nextNumber }: { nextNumber: number }) {
               className="input-base text-sm"
             >
               <option value="Goalkeeper">Goalkeeper</option>
+              <option value="GK">GK</option>
               <option value="Defender">Defender</option>
               <option value="Midfielder">Midfielder</option>
               <option value="Forward">Forward</option>

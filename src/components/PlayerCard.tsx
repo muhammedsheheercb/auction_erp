@@ -115,6 +115,7 @@ export default function PlayerCard({ player, isAdmin }: PlayerCardProps) {
                       <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Position</label>
                       <select name="position" defaultValue={player.position} className="input-base text-sm">
                         <option value="Goalkeeper">Goalkeeper</option>
+                        <option value="GK">GK</option>
                         <option value="Defender">Defender</option>
                         <option value="Midfielder">Midfielder</option>
                         <option value="Forward">Forward</option>
@@ -216,7 +217,7 @@ export default function PlayerCard({ player, isAdmin }: PlayerCardProps) {
           
           <div className="flex items-center justify-between border-t border-white/5 pt-4">
             <span className={`text-[10px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded ${
-              player.position === 'Goalkeeper' ? 'badge-gk' :
+              (player.position === 'Goalkeeper' || player.position === 'GK') ? 'badge-gk' :
               player.position === 'Defender'   ? 'badge-def' :
               player.position === 'Midfielder' ? 'badge-mid' : 'badge-fwd'
             }`}>{player.position}</span>

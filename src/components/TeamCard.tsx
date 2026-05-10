@@ -379,7 +379,7 @@ export default function TeamCard({ team, isAdmin }: TeamCardProps) {
                           <p className="font-black uppercase text-base tracking-tight text-white">{player.name}</p>
                           <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">
                             <span className={`px-2 py-0.5 rounded-md ${
-                              player.position === 'Goalkeeper' ? 'badge-gk' :
+                              (player.position === 'Goalkeeper' || player.position === 'GK') ? 'badge-gk' :
                               player.position === 'Defender'   ? 'badge-def' :
                               player.position === 'Midfielder' ? 'badge-mid' : 'badge-fwd'
                             }`}>{player.position}</span>

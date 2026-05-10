@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IPlayer extends Document {
   name: string;
   photo: string;
-  position: 'Goalkeeper' | 'Defender' | 'Midfielder' | 'Forward';
+  position: 'Goalkeeper' | 'Defender' | 'Midfielder' | 'Forward' | 'GK';
   number: number;
   basePrice: number;
   soldPrice?: number;
@@ -14,7 +14,7 @@ export interface IPlayer extends Document {
 const PlayerSchema: Schema = new Schema({
   name: { type: String, required: true },
   photo: { type: String, required: true },
-  position: { type: String, enum: ['Goalkeeper', 'Defender', 'Midfielder', 'Forward'], required: true },
+  position: { type: String, enum: ['Goalkeeper', 'Defender', 'Midfielder', 'Forward', 'GK'], required: true },
   number: { type: Number, required: true, unique: true, min: 1, max: 80 },
   basePrice: { type: Number, default: 500 },
   soldPrice: { type: Number },
@@ -22,4 +22,9 @@ const PlayerSchema: Schema = new Schema({
   status: { type: String, enum: ['available', 'sold', 'unsold'], default: 'available' },
 }, { timestamps: true });
 
-export default mongoose.models.Player || mongoose.model<IPlayer>('Player', PlayerSchema);
+// Force re-registration of the model if schema changes (important for Next.js hot-reloading)
+if (mongoose.models && mongoose.models.Player) {
+  delete (mongoose.models as any).Player;
+}
+
+export default mongoose.model<IPlayer>('Player', PlayerSchema);

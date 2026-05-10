@@ -60,9 +60,8 @@ export default function PlayerDownloadButton({ players }: { players: any[] }) {
         doc.line(10, 26, 200, 26);
       };
 
-      const positionOrder: Record<string, number> = { 'Forward': 1, 'Midfielder': 2, 'Defender': 3 };
+      const positionOrder: Record<string, number> = { 'Goalkeeper': 1, 'GK': 1, 'Forward': 2, 'Midfielder': 3, 'Defender': 4 };
       const filteredPlayers = players
-        .filter(p => p.position !== 'Goalkeeper')
         .sort((a, b) => {
           if (positionOrder[a.position] !== positionOrder[b.position]) {
             return positionOrder[a.position] - positionOrder[b.position];
