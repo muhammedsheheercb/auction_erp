@@ -1,6 +1,22 @@
-export async function uploadFile(file: File): Promise<string> {
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+export async function uploadFile(file: File, folder: string): Promise<string> {
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
-  const mimeType = file.type || 'image/webp';
-  return `data:${mimeType};base64,${buffer.toString('base64')}`;
+
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      { folder: `auction_erp/${folder}`, resource_type: 'image' },
+      (error, result) => {
+        if (error || !result) return reject(error);
+        resolve(result.secure_url);
+      }
+    ).end(buffer);
+  });
 }
