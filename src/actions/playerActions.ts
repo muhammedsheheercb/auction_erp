@@ -93,7 +93,11 @@ export async function updatePlayerStatus(id: string, status: string, soldPrice: 
 }
 
 export async function getPlayers() {
-  await connectDB();
-  const players = await Player.find({}).sort({ number: 1 }).lean();
-  return JSON.parse(JSON.stringify(players));
+  try {
+    await connectDB();
+    const players = await Player.find({}).sort({ number: 1 }).lean();
+    return JSON.parse(JSON.stringify(players));
+  } catch {
+    return [];
+  }
 }

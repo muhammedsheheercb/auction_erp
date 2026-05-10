@@ -91,9 +91,13 @@ export async function deleteTeam(id: string) {
 }
 
 export async function getTeams() {
-  await connectDB();
-  const teams = await Team.find({}).populate('players').lean();
-  return JSON.parse(JSON.stringify(teams));
+  try {
+    await connectDB();
+    const teams = await Team.find({}).populate('players').lean();
+    return JSON.parse(JSON.stringify(teams));
+  } catch {
+    return [];
+  }
 }
 
 

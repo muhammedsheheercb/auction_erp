@@ -22,9 +22,4 @@ const PlayerSchema: Schema = new Schema({
   status: { type: String, enum: ['available', 'sold', 'unsold'], default: 'available' },
 }, { timestamps: true });
 
-// Force re-registration of the model if schema changes (important for Next.js hot-reloading)
-if (mongoose.models && mongoose.models.Player) {
-  delete (mongoose.models as any).Player;
-}
-
-export default mongoose.model<IPlayer>('Player', PlayerSchema);
+export default (mongoose.models.Player as mongoose.Model<IPlayer>) || mongoose.model<IPlayer>('Player', PlayerSchema);
