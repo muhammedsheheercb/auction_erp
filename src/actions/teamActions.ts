@@ -104,7 +104,7 @@ export async function sellPlayer(playerId: string, teamId: string, price: number
 
   if (!team || !player) throw new Error('Team or Player not found');
   if (player.status !== 'available') throw new Error('Player already sold');
-  if (team.players.length >= 10) throw new Error('Squad is full (10 players max)');
+  if (team.players.length >= 9) throw new Error('Squad is full (9 players max)');
 
   const isGoalkeeper = player.position === 'Goalkeeper';
 

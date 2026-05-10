@@ -126,7 +126,7 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
   const isGK = selectedPlayer?.position === 'Goalkeeper';
 
   const calculateMaxBid = (team: any) => {
-    const slots = 10 - team.players.length;
+    const slots = 9 - team.players.length;
     if (slots === 0) return 0;
     const paidCount = team.players.filter((p: any) => p.position !== 'Goalkeeper').length;
     const afterPaidBuy = paidCount + 1;
@@ -507,12 +507,12 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
             {teams
               .filter(team => {
                 if (!selectedPlayer || selectedPlayer.status !== 'available') return true;
-                if (isGK) return team.players.length < 10;
+                if (isGK) return team.players.length < 9;
                 return calculateMaxBid(team) >= currentBid;
               })
               .map((team) => {
                 const maxBid   = calculateMaxBid(team);
-                const isFull   = team.players.length >= 10;
+                const isFull   = team.players.length >= 9;
                 const isSold   = selectedPlayer?.status === 'sold';
                 const canBid   = selectedPlayer && !isFull && !isSold && (isGK || maxBid >= currentBid);
 
@@ -547,12 +547,12 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
                     
                     <div className="flex items-center gap-2 mb-4">
                       <div className="flex-1 flex gap-1">
-                        {[...Array(10)].map((_, i) => (
+                        {[...Array(9)].map((_, i) => (
                           <div key={i} className={`flex-1 h-1 rounded-full ${i < team.players.length ? 'bg-emerald-500' : 'bg-white/10'}`} />
                         ))}
                       </div>
                       <span className="text-[10px] font-black text-slate-500 uppercase">
-                        {team.players.length}/10
+                        {team.players.length}/9
                       </span>
                     </div>
 

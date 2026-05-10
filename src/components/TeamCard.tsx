@@ -89,7 +89,7 @@ export default function TeamCard({ team, isAdmin }: TeamCardProps) {
     
     doc.setTextColor(100, 116, 139);
     doc.text(`POINTS REMAINING: ${team.remainingBudget} PTS`, 190, 55, { align: 'right' });
-    doc.text(`ROSTER STATUS: ${team.players.length}/10 PLAYERS`, 190, 62, { align: 'right' });
+    doc.text(`ROSTER STATUS: ${team.players.length}/9 PLAYERS`, 190, 62, { align: 'right' });
 
     // Prepare Table Data with Images
     const tableData = await Promise.all(team.players.map(async (p: any) => {
@@ -288,7 +288,7 @@ export default function TeamCard({ team, isAdmin }: TeamCardProps) {
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Squad Strength</p>
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-emerald-500" />
-                <span className="text-xl font-black italic">{team.players.length}/10</span>
+                <span className="text-xl font-black italic">{team.players.length}/9</span>
               </div>
             </div>
             <div className="text-right">
@@ -303,7 +303,7 @@ export default function TeamCard({ team, isAdmin }: TeamCardProps) {
           <div className="relative w-full h-2 bg-white/5 rounded-full overflow-hidden">
             <motion.div 
               initial={{ width: 0 }}
-              animate={{ width: `${(team.players.length / 10) * 100}%` }}
+              animate={{ width: `${(team.players.length / 9) * 100}%` }}
               transition={{ duration: 1, ease: "easeOut" }}
               className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full" 
             />
@@ -364,7 +364,7 @@ export default function TeamCard({ team, isAdmin }: TeamCardProps) {
                 </div>
 
                 <div className="flex items-center justify-between mb-6 px-2">
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Official Roster ({team.players.length}/10)</h3>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Official Roster ({team.players.length}/9)</h3>
                   <div className="h-[1px] flex-1 bg-white/5 mx-6" />
                 </div>
 
