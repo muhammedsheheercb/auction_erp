@@ -22,8 +22,8 @@ export default function Navbar({ isAdmin }: { isAdmin: boolean }) {
   const resetTimer = useCallback(() => {
     if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
     if (isAdmin) {
-      // 30 minutes = 1800000ms
-      logoutTimerRef.current = setTimeout(handleAutoLogout, 1800000);
+      // 7 hours = 25200000ms
+      logoutTimerRef.current = setTimeout(handleAutoLogout, 25200000);
     }
   }, [isAdmin, handleAutoLogout]);
 

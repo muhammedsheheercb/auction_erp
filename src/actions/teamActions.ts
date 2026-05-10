@@ -5,6 +5,7 @@ import Team from '@/models/Team';
 import Player from '@/models/Player';
 import { revalidatePath } from 'next/cache';
 import { uploadFile } from '@/lib/upload';
+import mongoose from 'mongoose';
 
 export async function createTeam(formData: FormData) {
   await connectDB();
@@ -134,7 +135,7 @@ export async function sellPlayer(playerId: string, teamId: string, price: number
 
   player.status = 'sold';
   player.soldPrice = price;
-  player.team = teamId;
+  player.team = teamId as any;
   await player.save();
 
   team.remainingBudget -= price;
