@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import { useState, useRef } from 'react';
-import { createTeam, deleteAllTeams } from '@/actions/teamActions';
-import { Trophy, ShieldAlert, Trash2 } from 'lucide-react';
-import ConfirmModal from './ConfirmModal';
+import { useState, useRef } from "react";
+import { createTeam, deleteAllTeams } from "@/actions/teamActions";
+import { Trophy, ShieldAlert, Trash2 } from "lucide-react";
+import ConfirmModal from "./ConfirmModal";
 
 export default function TeamForm() {
   const [loading, setLoading] = useState(false);
@@ -19,7 +19,7 @@ export default function TeamForm() {
       if (result.success) {
         formRef.current?.reset();
       } else {
-        setError(result.error || 'Something went wrong');
+        setError(result.error || "Something went wrong");
       }
     } catch (err: any) {
       setError(err.message);
@@ -52,15 +52,24 @@ export default function TeamForm() {
         cancelText="Abort"
       />
 
-      <form ref={formRef} id="team-form" action={handleSubmit} className="glass rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
+      <form
+        ref={formRef}
+        id="team-form"
+        action={handleSubmit}
+        className="glass rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl"
+      >
         {/* Header */}
         <div className="px-8 pt-8 pb-6 border-b border-white/5 flex items-center gap-4 bg-white/3">
           <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
             <Trophy className="w-6 h-6 text-emerald-500" />
           </div>
           <div className="flex-1">
-            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] leading-none mb-2">Franchise Hub</p>
-            <p className="text-xl font-black uppercase italic tracking-tighter text-white leading-none">Register New Team</p>
+            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] leading-none mb-2">
+              Franchise Hub
+            </p>
+            <p className="text-xl font-black uppercase italic tracking-tighter text-white leading-none">
+              Register New Team
+            </p>
           </div>
           <button
             type="button"
@@ -75,7 +84,9 @@ export default function TeamForm() {
         <div className="p-6 md:p-8 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Franchise Name</label>
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">
+                Franchise Name
+              </label>
               <input
                 name="name"
                 required
@@ -84,7 +95,9 @@ export default function TeamForm() {
               />
             </div>
             <div>
-              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Official Crest</label>
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">
+                Official Crest
+              </label>
               <input
                 type="file"
                 name="logo"
@@ -93,10 +106,12 @@ export default function TeamForm() {
               />
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Primary Manager</label>
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">
+                Primary Manager
+              </label>
               <input
                 name="manager1"
                 required
@@ -105,7 +120,9 @@ export default function TeamForm() {
               />
             </div>
             <div>
-              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Secondary Manager</label>
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">
+                Secondary Manager
+              </label>
               <input
                 name="manager2"
                 required
@@ -118,22 +135,24 @@ export default function TeamForm() {
           <div className="flex items-start gap-3 bg-white/3 p-4 rounded-2xl border border-white/5">
             <ShieldAlert className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed">
-              New franchises start with a standard budget of <span className="text-emerald-400 italic">25,000 PTS</span>. Budget updates automatically upon scout acquisitions.
+              New franchises start with a standard budget of{" "}
+              <span className="text-emerald-400 italic">20,000 PTS</span>.
+              Budget updates automatically upon scout acquisitions.
             </p>
           </div>
-          
+
           {error && (
             <div className="text-rose-400 text-[10px] font-black bg-rose-500/10 border border-rose-500/20 px-4 py-3 rounded-2xl uppercase tracking-widest">
               {error}
             </div>
           )}
-          
+
           <button
             type="submit"
             disabled={loading}
             className="btn-primary w-full py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.25em] active:scale-95 shadow-2xl shadow-emerald-500/20"
           >
-            {loading ? 'Finalizing Registry...' : 'Authorize Franchise'}
+            {loading ? "Finalizing Registry..." : "Authorize Franchise"}
           </button>
         </div>
       </form>

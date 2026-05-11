@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Trophy, Users, Play, ArrowRight, Zap, ChevronRight } from "lucide-react";
+import {
+  Trophy,
+  Users,
+  Play,
+  ArrowRight,
+  Zap,
+  ChevronRight,
+} from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Home() {
@@ -43,8 +50,8 @@ export default function Home() {
           </h1>
 
           <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-slate-300 md:text-xl">
-            Experience the most immersive ISL-style football draft.
-            From player scouting to live bidding, every second counts.
+            Experience the most immersive ISL-style football draft. From player
+            scouting to live bidding, every second counts.
           </p>
 
           {/* CTAs */}
@@ -74,16 +81,26 @@ export default function Home() {
             className="mx-auto mt-12 md:mt-16 grid grid-cols-2 sm:flex max-w-2xl divide-white/10 rounded-2xl md:rounded-3xl border border-white/5 bg-white/3 p-4 md:p-6 backdrop-blur-xl gap-4 sm:gap-0"
           >
             <div className="flex-1 px-2 md:px-4 border-r border-white/10">
-              <div className="text-xl md:text-3xl font-black text-white">80</div>
-              <div className="text-[9px] md:text-xs font-bold uppercase tracking-widest text-amber-500/80">Athletes</div>
+              <div className="text-xl md:text-3xl font-black text-white">
+                72
+              </div>
+              <div className="text-[9px] md:text-xs font-bold uppercase tracking-widest text-amber-500/80">
+                Players
+              </div>
             </div>
             <div className="flex-1 px-2 md:px-4 sm:border-r sm:border-white/10">
-              <div className="text-xl md:text-3xl font-black text-white">10</div>
-              <div className="text-[9px] md:text-xs font-bold uppercase tracking-widest text-emerald-500/80">Franchises</div>
+              <div className="text-xl md:text-3xl font-black text-white">8</div>
+              <div className="text-[9px] md:text-xs font-bold uppercase tracking-widest text-emerald-500/80">
+                Teams
+              </div>
             </div>
             <div className="flex-1 px-2 md:px-4 col-span-2 sm:col-span-1 border-t border-white/10 pt-4 sm:border-t-0 sm:pt-0">
-              <div className="text-xl md:text-3xl font-black gradient-text">25,000+</div>
-              <div className="text-[9px] md:text-xs font-bold uppercase tracking-widest text-slate-400">Points Cap</div>
+              <div className="text-xl md:text-3xl font-black gradient-text">
+                20,000
+              </div>
+              <div className="text-[9px] md:text-xs font-bold uppercase tracking-widest text-slate-400">
+                Points Cap
+              </div>
             </div>
           </motion.div>
         </motion.div>
@@ -92,8 +109,12 @@ export default function Home() {
       {/* ── Feature Grid ────────────────────────────── */}
       <section className="relative z-20 mx-auto max-w-6xl px-6 py-24">
         <div className="mb-16 text-center">
-          <h2 className="font-display text-3xl font-bold text-white sm:text-5xl">Professional Grade ERP</h2>
-          <p className="mt-4 text-slate-400">Streamlined management for the elite league.</p>
+          <h2 className="font-display text-3xl font-bold text-white sm:text-5xl">
+            Professional Grade ERP
+          </h2>
+          <p className="mt-4 text-slate-400">
+            Streamlined management for the elite league.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -102,20 +123,20 @@ export default function Home() {
               icon: <Trophy className="h-6 w-6 text-amber-500" />,
               title: "Squad Management",
               desc: "Manage rosters with ISL-style rules, position quotas, and real-time squad valuation.",
-              img: "https://images.unsplash.com/photo-1748111823699-9df50688a94c?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+              img: "https://images.unsplash.com/photo-1748111823699-9df50688a94c?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
             },
             {
               icon: <Zap className="h-6 w-6 text-emerald-400" />,
               title: "Live Bidding Engine",
               desc: "Fast, secure, and transparent auction process with automated budget validation.",
-              img: "https://images.unsplash.com/photo-1518091043644-c1d4457512c6?q=80&w=2062&auto=format&fit=crop"
+              img: "https://images.unsplash.com/photo-1518091043644-c1d4457512c6?q=80&w=2062&auto=format&fit=crop",
             },
             {
               icon: <Users className="h-6 w-6 text-blue-400" />,
               title: "Scouting Portal",
               desc: "Detailed player profiles with professional stats, scouting reports, and high-res imagery.",
-              img: "https://images.unsplash.com/photo-1517466787929-bc90951d0974?q=80&w=2186&auto=format&fit=crop"
-            }
+              img: "https://images.unsplash.com/photo-1517466787929-bc90951d0974?q=80&w=2186&auto=format&fit=crop",
+            },
           ].map((item, idx) => (
             <motion.div
               key={idx}
@@ -133,8 +154,12 @@ export default function Home() {
                 <div className="mb-4 inline-flex rounded-2xl bg-white/5 p-3">
                   {item.icon}
                 </div>
-                <h3 className="mb-3 text-xl font-bold text-white">{item.title}</h3>
-                <p className="text-sm leading-relaxed text-slate-400">{item.desc}</p>
+                <h3 className="mb-3 text-xl font-bold text-white">
+                  {item.title}
+                </h3>
+                <p className="text-sm leading-relaxed text-slate-400">
+                  {item.desc}
+                </p>
               </div>
             </motion.div>
           ))}
@@ -145,8 +170,14 @@ export default function Home() {
       <footer className="relative z-20 border-t border-white/5 py-12 px-6">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 md:flex-row">
           <div className="flex items-center gap-4">
-            <img src="/images/logo.webp" className="h-10 w-10 opacity-80" alt="Logo" />
-            <span className="text-sm font-bold text-slate-400">Cheloor Super League</span>
+            <img
+              src="/images/logo.webp"
+              className="h-10 w-10 opacity-80"
+              alt="Logo"
+            />
+            <span className="text-sm font-bold text-slate-400">
+              Cheloor Super League
+            </span>
           </div>
           <div className="flex gap-8 text-xs font-bold uppercase tracking-widest text-slate-500">
             <span>2026 Season</span>
