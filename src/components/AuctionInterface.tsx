@@ -527,12 +527,12 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
             {teams
               .filter(team => {
                 if (!selectedPlayer || selectedPlayer.status !== 'available') return true;
-                if (isGK) return team.players.length < 9;
+                if (isGK) return team.players.length < 10;
                 return calculateMaxBid(team) >= currentBid;
               })
               .map((team) => {
                 const maxBid   = calculateMaxBid(team);
-                const isFull   = team.players.length >= 9;
+                const isFull   = team.players.length >= 10;
                 const isSold   = selectedPlayer?.status === 'sold';
                 const canBid   = selectedPlayer && !isFull && !isSold && (isGK || maxBid >= currentBid);
 
@@ -567,12 +567,12 @@ export default function AuctionInterface({ players, teams, isAdmin }: { players:
                     
                     <div className="flex items-center gap-2 mb-4">
                       <div className="flex-1 flex gap-1">
-                        {[...Array(9)].map((_, i) => (
+                        {[...Array(10)].map((_, i) => (
                           <div key={i} className={`flex-1 h-1 rounded-full ${i < team.players.length ? 'bg-emerald-500' : 'bg-white/10'}`} />
                         ))}
                       </div>
                       <span className="text-[10px] font-black text-slate-500 uppercase">
-                        {team.players.length}/9
+                        {team.players.length}/10
                       </span>
                     </div>
 

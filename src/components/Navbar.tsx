@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, Home, Users, Trophy, Play } from 'lucide-react';
+import { Menu, X, Home, Users, Trophy, Play, LayoutGrid } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useCallback, useRef } from 'react';
 
@@ -50,6 +50,7 @@ export default function Navbar({ isAdmin }: { isAdmin: boolean }) {
     { name: 'Auction', href: '/auction', icon: Play },
     { name: 'Players', href: '/players', icon: Users },
     { name: 'Teams', href: '/teams', icon: Trophy },
+    { name: 'Squads', href: '/squad', icon: LayoutGrid },
   ];
 
   return (

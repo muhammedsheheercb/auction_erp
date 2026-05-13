@@ -109,12 +109,12 @@ export async function sellPlayer(playerId: string, teamId: string, price: number
 
   if (!team || !player) throw new Error('Team or Player not found');
   if (player.status !== 'available') throw new Error('Player already sold');
-  if (team.players.length >= 9) throw new Error('Squad is full (9 players max)');
+  if (team.players.length >= 10) throw new Error('Squad is full (10 players max)');
 
   const isGoalkeeper = player.position === 'Goalkeeper';
 
   // Paid signings: check budget and minimum-reserve rule.
-  // 'Goalkeeper' is free and does NOT count toward the mandatory 8-player minimum.
+  // 'Goalkeeper' is free and does NOT count toward the mandatory 9-player minimum.
   // 'GK' is a normal paid position.
   if (price > 0) {
     if (team.remainingBudget < price) throw new Error('Insufficient budget');
@@ -123,7 +123,7 @@ export async function sellPlayer(playerId: string, teamId: string, price: number
       position: { $ne: 'Goalkeeper' },
     });
     const afterPaidBuy = paidCount + 1;
-    const stillRequired = Math.max(0, 8 - afterPaidBuy);
+    const stillRequired = Math.max(0, 9 - afterPaidBuy);
     const minimumReserved = stillRequired * 500;
     if (team.remainingBudget - price < minimumReserved) {
       throw new Error(
