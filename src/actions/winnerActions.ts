@@ -36,6 +36,27 @@ export async function getWinners() {
   }
 }
 
+export async function updateWinner(id: string, formData: FormData) {
+  try {
+    await connectDB();
+    const teamName = formData.get('teamName') as string;
+    const season = formData.get('season') as string;
+    const photoFile = formData.get('photo') as File;
+
+    const updateData: any = { teamName, season };
+    
+    if (photoFile && photoFile.size > 0) {
+      updateData.photo = await uploadFile(photoFile, 'winners');
+    }
+
+    await Winner.findByIdAndUpdate(id, updateData);
+    revalidatePath('/gallery');
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
 export async function deleteWinner(id: string) {
   try {
     await connectDB();

@@ -57,7 +57,7 @@ export default function Navbar({ isAdmin }: { isAdmin: boolean }) {
 
   return (
     <>
-      <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[95%] max-w-5xl">
+      <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[95%] max-w-7xl">
         <div className="glass rounded-2xl border border-white/10 px-4 md:px-6 py-3 shadow-2xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 md:gap-8">
