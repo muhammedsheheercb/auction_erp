@@ -15,6 +15,7 @@ export interface IGoalScorer {
 export interface IMatch extends Document {
   stage: MatchStage;
   matchNumber: number;
+  day: number;
   homeTeam: mongoose.Types.ObjectId;
   homeTeamName: string;
   homeTeamLogo: string;
@@ -42,6 +43,7 @@ const MatchSchema: Schema = new Schema({
     required: true,
   },
   matchNumber:   { type: Number, required: true },
+  day:           { type: Number, default: 1 },
   homeTeam:      { type: Schema.Types.ObjectId, ref: 'Team', required: true },
   homeTeamName:  { type: String, required: true },
   homeTeamLogo:  { type: String, default: '' },

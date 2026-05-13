@@ -13,27 +13,49 @@ function isGroupA(name: string) {
   return GROUP_A_KEYWORDS.some(k => lower.includes(k));
 }
 
-function buildRoundRobin(teams: any[], stage: string) {
+function mkMatch(stage: string, n: number, home: any, away: any, day = 1) {
+  return {
+    stage, matchNumber: n, day,
+    homeTeam: home._id, homeTeamName: home.name, homeTeamLogo: home.logo || '',
+    awayTeam: away._id, awayTeamName: away.name, awayTeamLogo: away.logo || '',
+    homeScore: 0, awayScore: 0, status: 'upcoming', goalScorers: [],
+  };
+}
+
+// 4 teams → full round-robin, 6 matches, each team plays 3
+//   Day 1 (4 matches): each team plays 2
+//   Day 2 (2 matches): each team plays 1 → top 2 advance to semis
+function buildGroupMatches(teams: any[], stage: string) {
+  const t = teams;
+  if (t.length === 4) {
+    return [
+      mkMatch(stage, 1, t[0], t[1], 1),
+      mkMatch(stage, 2, t[2], t[3], 1),
+      mkMatch(stage, 3, t[0], t[2], 1),
+      mkMatch(stage, 4, t[1], t[3], 1),
+      mkMatch(stage, 5, t[0], t[3], 2),
+      mkMatch(stage, 6, t[1], t[2], 2),
+    ];
+  }
+  if (t.length === 3) {
+    return [
+      mkMatch(stage, 1, t[0], t[1], 1),
+      mkMatch(stage, 2, t[2], t[0], 1),
+      mkMatch(stage, 3, t[1], t[2], 2),
+    ];
+  }
+  if (t.length === 2) {
+    return [
+      mkMatch(stage, 1, t[0], t[1], 1),
+      mkMatch(stage, 2, t[1], t[0], 2),
+    ];
+  }
+  // fallback full round-robin (day 1 for all)
   const matches: any[] = [];
   let n = 1;
-  for (let i = 0; i < teams.length; i++) {
-    for (let j = i + 1; j < teams.length; j++) {
-      matches.push({
-        stage,
-        matchNumber: n++,
-        homeTeam: teams[i]._id,
-        homeTeamName: teams[i].name,
-        homeTeamLogo: teams[i].logo || '',
-        awayTeam: teams[j]._id,
-        awayTeamName: teams[j].name,
-        awayTeamLogo: teams[j].logo || '',
-        homeScore: 0,
-        awayScore: 0,
-        status: 'upcoming',
-        goalScorers: [],
-      });
-    }
-  }
+  for (let i = 0; i < t.length; i++)
+    for (let j = i + 1; j < t.length; j++)
+      matches.push(mkMatch(stage, n++, t[i], t[j], 1));
   return matches;
 }
 
@@ -50,8 +72,8 @@ export async function initializeTournament() {
   if (groupB.length < 2) return { success: false, error: 'Need at least 2 Group B teams.' };
 
   await Match.insertMany([
-    ...buildRoundRobin(groupA, 'GROUP_A'),
-    ...buildRoundRobin(groupB, 'GROUP_B'),
+    ...buildGroupMatches(groupA, 'GROUP_A'),
+    ...buildGroupMatches(groupB, 'GROUP_B'),
   ]);
 
   revalidatePath('/tournament');
@@ -61,6 +83,26 @@ export async function initializeTournament() {
 export async function resetTournament() {
   await connectDB();
   await Match.deleteMany({});
+  revalidatePath('/tournament');
+  return { success: true };
+}
+
+export async function resetAndInitializeTournament() {
+  await connectDB();
+  await Match.deleteMany({});
+
+  const teams = await Team.find({}).lean();
+  const groupA = teams.filter(t => isGroupA(t.name));
+  const groupB = teams.filter(t => !isGroupA(t.name));
+
+  if (groupA.length < 2) return { success: false, error: 'Need at least 2 Group A teams.' };
+  if (groupB.length < 2) return { success: false, error: 'Need at least 2 Group B teams.' };
+
+  await Match.insertMany([
+    ...buildGroupMatches(groupA, 'GROUP_A'),
+    ...buildGroupMatches(groupB, 'GROUP_B'),
+  ]);
+
   revalidatePath('/tournament');
   return { success: true };
 }

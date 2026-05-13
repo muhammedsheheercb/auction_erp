@@ -9,11 +9,13 @@ import {
 import { toPng } from 'html-to-image';
 import {
   updateMatch, deleteMatch, initializeTournament, resetTournament,
-  generateSemiFinals, generateFinals,
+  resetAndInitializeTournament, generateSemiFinals, generateFinals,
 } from '@/actions/matchActions';
 import ConfirmModal from './ConfirmModal';
 
 // ─── types ────────────────────────────────────────────────────────────────────
+
+type TeamSlotInfo = { name: string; logo?: string; isLabel?: boolean };
 
 interface GoalScorer {
   _id?: string;
@@ -28,6 +30,7 @@ interface Match {
   _id: string;
   stage: 'GROUP_A' | 'GROUP_B' | 'SEMI_1' | 'SEMI_2' | 'LOSERS_FINAL' | 'FINAL';
   matchNumber: number;
+  day?: number;
   homeTeam: string;
   homeTeamName: string;
   homeTeamLogo: string;
@@ -405,76 +408,163 @@ function FixtureSection({ label, fileKey, matches, isAdmin, onEdit, onDelete }: 
   );
 }
 
-function KnockoutBracket({ matches }: { matches: Match[] }) {
-  const sf1  = matches.find(m => m.stage === 'SEMI_1');
-  const sf2  = matches.find(m => m.stage === 'SEMI_2');
-  const lf   = matches.find(m => m.stage === 'LOSERS_FINAL');
-  const fin  = matches.find(m => m.stage === 'FINAL');
+function BracketMatchCard({ label, accent, homeSlot, awaySlot, match }: {
+  label: string; accent: string;
+  homeSlot: TeamSlotInfo; awaySlot: TeamSlotInfo; match?: Match;
+}) {
+  const done = match?.status === 'completed';
+  const homeWon = done && match!.homeScore > match!.awayScore;
+  const awayWon = done && match!.awayScore > match!.homeScore;
 
-  if (!sf1 && !sf2) {
-    return (
-      <div className="glass rounded-3xl border border-dashed border-white/5 py-20 flex flex-col items-center text-center">
-        <Swords className="w-12 h-12 text-slate-700 mb-4 opacity-20" />
-        <p className="text-slate-600 font-black uppercase tracking-widest text-sm">Knockout stage not started</p>
-        <p className="text-slate-700 font-bold uppercase text-xs mt-2">Complete the group stage to unlock</p>
+  const TeamRow = ({ slot, score, won }: { slot: TeamSlotInfo; score?: number; won?: boolean }) => (
+    <div className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-colors ${won ? 'bg-amber-500/10' : 'bg-white/3'}`}>
+      <div className="w-8 h-8 shrink-0 flex items-center justify-center">
+        {!slot.isLabel && slot.logo
+          ? <img src={slot.logo} alt={slot.name} className="w-8 h-8 object-contain" />
+          : <div className="w-7 h-7 rounded-full border border-white/10 flex items-center justify-center bg-white/5">
+              <Trophy className="w-3.5 h-3.5 text-slate-600" />
+            </div>}
       </div>
-    );
-  }
-
-  const KOMatch = ({ match, label, accent }: { match?: Match; label: string; accent: string }) => (
-    <div className={`glass rounded-2xl border border-white/5 overflow-hidden`}>
-      <div className={`px-4 py-2 border-b border-white/5 text-[9px] font-black uppercase tracking-widest ${accent}`}>{label}</div>
-      {match ? (
-        <div className="p-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <div className="text-center">
-            <div className="flex justify-center mb-1">
-              {match.homeTeamLogo
-                ? <img src={match.homeTeamLogo} className="w-8 h-8 object-contain" alt="" />
-                : <Trophy className="w-7 h-7 text-slate-600" />}
-            </div>
-            <p className="text-[9px] sm:text-[10px] font-black uppercase leading-tight max-w-[72px] mx-auto">{match.homeTeamName}</p>
-          </div>
-          <div className="text-center min-w-[56px]">
-            {match.status === 'completed' ? (
-              <p className="text-xl font-black tabular-nums">
-                <span className={match.homeScore > match.awayScore ? 'text-white' : 'text-slate-500'}>{match.homeScore}</span>
-                <span className="text-slate-600 mx-1">–</span>
-                <span className={match.awayScore > match.homeScore ? 'text-white' : 'text-slate-500'}>{match.awayScore}</span>
-              </p>
-            ) : (
-              <p className="text-slate-600 font-black text-sm">VS</p>
-            )}
-            <p className={`text-[8px] font-black uppercase tracking-widest mt-1 ${match.status === 'completed' ? 'text-emerald-400' : 'text-slate-600'}`}>
-              {match.status === 'completed' ? 'FT' : 'TBD'}
-            </p>
-          </div>
-          <div className="text-center">
-            <div className="flex justify-center mb-1">
-              {match.awayTeamLogo
-                ? <img src={match.awayTeamLogo} className="w-8 h-8 object-contain" alt="" />
-                : <Trophy className="w-7 h-7 text-slate-600" />}
-            </div>
-            <p className="text-[9px] sm:text-[10px] font-black uppercase leading-tight max-w-[72px] mx-auto">{match.awayTeamName}</p>
-          </div>
-        </div>
-      ) : (
-        <div className="p-6 text-center text-slate-600 text-xs font-black uppercase tracking-widest">TBD</div>
+      <span className={`flex-1 text-[10px] sm:text-xs font-black uppercase leading-tight ${slot.isLabel ? 'text-slate-500 italic' : won ? 'text-white' : 'text-slate-300'}`}>
+        {slot.name}
+      </span>
+      {done && score !== undefined && (
+        <span className={`text-lg font-black tabular-nums ${won ? 'text-white' : 'text-slate-600'}`}>{score}</span>
       )}
+      {won && <span className="ml-1 text-[7px] font-black text-amber-400 uppercase bg-amber-500/15 px-1.5 py-0.5 rounded-full">W</span>}
     </div>
   );
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <KOMatch match={sf1} label="Semi-Final 1" accent="text-amber-400" />
-        <KOMatch match={sf2} label="Semi-Final 2" accent="text-amber-400" />
+    <div className="glass rounded-2xl border border-white/5 overflow-hidden">
+      <div className={`px-4 py-2.5 border-b border-white/5 ${accent}`}>
+        <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
       </div>
-      {(lf || fin) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <KOMatch match={lf}  label="3rd Place Match" accent="text-slate-400" />
-          <KOMatch match={fin} label="Grand Final 🏆"   accent="text-amber-500" />
+      <div className="p-3 space-y-1.5">
+        <TeamRow slot={homeSlot} score={match?.homeScore} won={homeWon} />
+        <div className="flex items-center gap-2 px-2">
+          <div className="h-px flex-1 bg-white/5" />
+          <span className="text-[8px] font-black uppercase tracking-widest text-slate-700">vs</span>
+          <div className="h-px flex-1 bg-white/5" />
+        </div>
+        <TeamRow slot={awaySlot} score={match?.awayScore} won={awayWon} />
+      </div>
+      <div className="px-3 pb-3">
+        <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${
+          done ? 'bg-emerald-500/10 text-emerald-400' : 'bg-white/5 text-slate-600'
+        }`}>
+          {done ? 'Full Time' : 'Upcoming'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function KnockoutBracket({ allMatches, teams, teamMap }: {
+  allMatches: Match[]; teams: Team[]; teamMap: Map<string, Team>;
+}) {
+  const groupAMs = allMatches.filter(m => m.stage === 'GROUP_A');
+  const groupBMs = allMatches.filter(m => m.stage === 'GROUP_B');
+  const sf1 = allMatches.find(m => m.stage === 'SEMI_1');
+  const sf2 = allMatches.find(m => m.stage === 'SEMI_2');
+  const lf  = allMatches.find(m => m.stage === 'LOSERS_FINAL');
+  const fin = allMatches.find(m => m.stage === 'FINAL');
+
+  const groupAIds = teams.filter(t =>  isGroupA(t.name)).map(t => t._id);
+  const groupBIds = teams.filter(t => !isGroupA(t.name)).map(t => t._id);
+  const standA = calcStandings(groupAIds, teamMap, groupAMs, 'GROUP_A');
+  const standB = calcStandings(groupBIds, teamMap, groupBMs, 'GROUP_B');
+
+  const groupStageDone =
+    groupAMs.length > 0 && groupBMs.length > 0 &&
+    [...groupAMs, ...groupBMs].every(m => m.status === 'completed');
+
+  const a1 = groupStageDone ? (standA[0]?.team ?? null) : null;
+  const a2 = groupStageDone ? (standA[1]?.team ?? null) : null;
+  const b1 = groupStageDone ? (standB[0]?.team ?? null) : null;
+  const b2 = groupStageDone ? (standB[1]?.team ?? null) : null;
+
+  function mkSlot(fromMatch: { name: string; logo: string } | null, fromTeam: Team | null, label: string): TeamSlotInfo {
+    if (fromMatch) return { name: fromMatch.name, logo: fromMatch.logo };
+    if (fromTeam)  return { name: fromTeam.name,  logo: fromTeam.logo  };
+    return { name: label, isLabel: true };
+  }
+  function getWinner(m?: Match): { name: string; logo: string } | null {
+    if (!m || m.status !== 'completed') return null;
+    return m.homeScore > m.awayScore
+      ? { name: m.homeTeamName, logo: m.homeTeamLogo }
+      : { name: m.awayTeamName, logo: m.awayTeamLogo };
+  }
+  function getLoser(m?: Match): { name: string; logo: string } | null {
+    if (!m || m.status !== 'completed') return null;
+    return m.homeScore > m.awayScore
+      ? { name: m.awayTeamName, logo: m.awayTeamLogo }
+      : { name: m.homeTeamName, logo: m.homeTeamLogo };
+  }
+
+  const sf1Home = mkSlot(sf1 ? { name: sf1.homeTeamName, logo: sf1.homeTeamLogo } : null, a1, 'Group A · 1st');
+  const sf1Away = mkSlot(sf1 ? { name: sf1.awayTeamName, logo: sf1.awayTeamLogo } : null, b2, 'Group B · 2nd');
+  const sf2Home = mkSlot(sf2 ? { name: sf2.homeTeamName, logo: sf2.homeTeamLogo } : null, b1, 'Group B · 1st');
+  const sf2Away = mkSlot(sf2 ? { name: sf2.awayTeamName, logo: sf2.awayTeamLogo } : null, a2, 'Group A · 2nd');
+
+  const finHome = mkSlot(fin ? { name: fin.homeTeamName, logo: fin.homeTeamLogo } : getWinner(sf1), null, 'SF1 · Winner');
+  const finAway = mkSlot(fin ? { name: fin.awayTeamName, logo: fin.awayTeamLogo } : getWinner(sf2), null, 'SF2 · Winner');
+  const lfHome  = mkSlot(lf  ? { name: lf.homeTeamName,  logo: lf.homeTeamLogo  } : getLoser(sf1),  null, 'SF1 · Loser');
+  const lfAway  = mkSlot(lf  ? { name: lf.awayTeamName,  logo: lf.awayTeamLogo  } : getLoser(sf2),  null, 'SF2 · Loser');
+
+  const BracketDivider = ({ label }: { label: string }) => (
+    <div className="flex items-center gap-3">
+      <div className="h-px flex-1 bg-white/5" />
+      <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">{label}</span>
+      <div className="h-px flex-1 bg-white/5" />
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* Status banner */}
+      {!groupStageDone && (
+        <div className="flex items-center gap-2.5 px-4 py-3 glass rounded-2xl border border-amber-500/10 bg-amber-500/5">
+          <Swords className="w-3.5 h-3.5 text-amber-500/60 shrink-0" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/60">
+            Group stage in progress — semi-final teams will be confirmed once all group matches finish
+          </p>
         </div>
       )}
+      {groupStageDone && !sf1 && (
+        <div className="flex items-center gap-2.5 px-4 py-3 glass rounded-2xl border border-emerald-500/10 bg-emerald-500/5">
+          <ChevronUp className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+            Group stage complete — generate semi-finals to begin Day 2 knockout
+          </p>
+        </div>
+      )}
+
+      <BracketDivider label="Semi-Finals · Day 2" />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <BracketMatchCard label="Semi-Final 1" accent="text-amber-400" match={sf1} homeSlot={sf1Home} awaySlot={sf1Away} />
+        <BracketMatchCard label="Semi-Final 2" accent="text-amber-400" match={sf2} homeSlot={sf2Home} awaySlot={sf2Away} />
+      </div>
+
+      {/* Flow connectors */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        <div className="flex flex-col items-center gap-0.5 pt-1">
+          <div className="w-px h-4 bg-slate-700/60" />
+          <span className="text-[7px] font-black uppercase tracking-wider text-slate-700">Loser → 3rd Place</span>
+        </div>
+        <div className="flex flex-col items-center gap-0.5 pt-1">
+          <div className="w-px h-4 bg-amber-500/30" />
+          <span className="text-[7px] font-black uppercase tracking-wider text-amber-600/50">Winner → Final</span>
+        </div>
+      </div>
+
+      <BracketDivider label="Finals · Day 2" />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <BracketMatchCard label="3rd Place Match" accent="text-slate-400" match={lf}  homeSlot={lfHome}  awaySlot={lfAway}  />
+        <BracketMatchCard label="Grand Final 🏆"  accent="text-amber-500" match={fin} homeSlot={finHome} awaySlot={finAway} />
+      </div>
     </div>
   );
 }
@@ -775,6 +865,14 @@ export default function TournamentView({ matches, teams, isAdmin }: Props) {
     });
   }
 
+  async function handleResetAndInit() {
+    startTrans(async () => {
+      const res = await resetAndInitializeTournament();
+      if (!res.success) showToast(res.error ?? 'Error');
+      else showToast('Group stage reset & initialized');
+    });
+  }
+
   async function handleGenSemis() {
     startTrans(async () => {
       const res = await generateSemiFinals();
@@ -847,6 +945,17 @@ export default function TournamentView({ matches, teams, isAdmin }: Props) {
               <Zap className="w-3.5 h-3.5" /> Initialize Tournament
             </button>
           )}
+          <button
+            onClick={() => withConfirm(
+              'Reset & Initialize Group Stage',
+              'Delete ALL matches and recreate group stage fixtures? Day 1: each team plays 2 matches. Day 2: each team plays 1 balance match.',
+              handleResetAndInit
+            )}
+            disabled={isPending}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 text-[11px] font-black uppercase tracking-widest hover:bg-violet-500/20 transition-all disabled:opacity-50"
+          >
+            <RotateCcw className="w-3.5 h-3.5" /> Reset & Initialize
+          </button>
           {initialized && !hasSemis && (
             <button
               onClick={() => withConfirm('Generate Semi-Finals', 'Create semi-finals from current group standings?', handleGenSemis)}
@@ -916,36 +1025,89 @@ export default function TournamentView({ matches, teams, isAdmin }: Props) {
           )}
 
           {/* FIXTURES */}
-          {tab === 'fixtures' && (
-            <div className="space-y-8">
-              {!initialized && (
-                <div className="glass rounded-3xl border border-dashed border-white/5 py-20 flex flex-col items-center text-center">
-                  <Swords className="w-12 h-12 text-slate-700 mb-4 opacity-20" />
-                  <p className="text-slate-600 font-black uppercase tracking-widest text-sm">No fixtures yet</p>
-                  {isAdmin && <p className="text-slate-700 text-xs font-bold uppercase mt-2">Use "Initialize Tournament" to create fixtures</p>}
+          {tab === 'fixtures' && (() => {
+            const gADay1 = groupAMatches.filter(m => (m.day ?? 1) === 1);
+            const gADay2 = groupAMatches.filter(m => (m.day ?? 1) === 2);
+            const gBDay1 = groupBMatches.filter(m => (m.day ?? 1) === 1);
+            const gBDay2 = groupBMatches.filter(m => (m.day ?? 1) === 2);
+
+            const semiMs   = knockoutMatches.filter(m => m.stage === 'SEMI_1' || m.stage === 'SEMI_2');
+            const finalsMs = knockoutMatches.filter(m => m.stage === 'LOSERS_FINAL' || m.stage === 'FINAL');
+
+            const hasDay2Group = gADay2.length > 0 || gBDay2.length > 0;
+            const hasDay2 = hasDay2Group || knockoutMatches.length > 0;
+
+            const onDel = (m: Match) =>
+              withConfirm('Delete Match', `Delete ${m.homeTeamName} vs ${m.awayTeamName}?`, () => handleDeleteMatch(m));
+
+            const DayHeader = ({ day, label }: { day: string; label: string }) => (
+              <div className="flex items-center gap-4">
+                <div className="glass rounded-2xl px-4 py-2.5 border border-white/10 shrink-0">
+                  <p className="text-[8px] font-black uppercase tracking-widest text-slate-500">Day {day}</p>
+                  <p className="text-sm font-black uppercase tracking-tight text-white leading-tight">{label}</p>
                 </div>
-              )}
-              {[
-                { key: 'GROUP_A',     label: 'Group A Fixtures',  ms: groupAMatches },
-                { key: 'GROUP_B',     label: 'Group B Fixtures',  ms: groupBMatches },
-                { key: 'KNOCKOUT',    label: 'Knockout Stage',     ms: knockoutMatches },
-              ].filter(s => s.ms.length > 0).map(section => (
-                <FixtureSection
-                  key={section.key}
-                  label={section.label}
-                  fileKey={section.key}
-                  matches={section.ms}
-                  isAdmin={isAdmin}
-                  onEdit={setEditMatch}
-                  onDelete={m => withConfirm('Delete Match', `Delete ${m.homeTeamName} vs ${m.awayTeamName}?`, () => handleDeleteMatch(m))}
-                />
-              ))}
-            </div>
-          )}
+                <div className="h-px flex-1 bg-white/5" />
+              </div>
+            );
+
+            return (
+              <div className="space-y-10">
+                {!initialized && (
+                  <div className="glass rounded-3xl border border-dashed border-white/5 py-20 flex flex-col items-center text-center">
+                    <Swords className="w-12 h-12 text-slate-700 mb-4 opacity-20" />
+                    <p className="text-slate-600 font-black uppercase tracking-widest text-sm">No fixtures yet</p>
+                    {isAdmin && <p className="text-slate-700 text-xs font-bold uppercase mt-2">Use "Initialize Tournament" to create fixtures</p>}
+                  </div>
+                )}
+
+                {/* Day 1 — Group Stage (matches 1-2 per group) */}
+                {(gADay1.length > 0 || gBDay1.length > 0) && (
+                  <div className="space-y-6">
+                    <DayHeader day="1" label="Group Stage" />
+                    {gADay1.length > 0 && (
+                      <FixtureSection label="Group A" fileKey="GROUP_A_D1" matches={gADay1}
+                        isAdmin={isAdmin} onEdit={setEditMatch} onDelete={onDel} />
+                    )}
+                    {gBDay1.length > 0 && (
+                      <FixtureSection label="Group B" fileKey="GROUP_B_D1" matches={gBDay1}
+                        isAdmin={isAdmin} onEdit={setEditMatch} onDelete={onDel} />
+                    )}
+                  </div>
+                )}
+
+                {/* Day 2 — Remaining group matches + Knockout */}
+                {hasDay2 && (
+                  <div className="space-y-6">
+                    <DayHeader day="2" label="Finals Day" />
+
+                    {/* Remaining group matches */}
+                    {gADay2.length > 0 && (
+                      <FixtureSection label="Group A" fileKey="GROUP_A_D2" matches={gADay2}
+                        isAdmin={isAdmin} onEdit={setEditMatch} onDelete={onDel} />
+                    )}
+                    {gBDay2.length > 0 && (
+                      <FixtureSection label="Group B" fileKey="GROUP_B_D2" matches={gBDay2}
+                        isAdmin={isAdmin} onEdit={setEditMatch} onDelete={onDel} />
+                    )}
+
+                    {/* Knockout */}
+                    {semiMs.length > 0 && (
+                      <FixtureSection label="Semi-Finals" fileKey="SEMIFINALS" matches={semiMs}
+                        isAdmin={isAdmin} onEdit={setEditMatch} onDelete={onDel} />
+                    )}
+                    {finalsMs.length > 0 && (
+                      <FixtureSection label="Finals" fileKey="FINALS" matches={finalsMs}
+                        isAdmin={isAdmin} onEdit={setEditMatch} onDelete={onDel} />
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* KNOCKOUT */}
           {tab === 'knockout' && (
-            <KnockoutBracket matches={knockoutMatches} />
+            <KnockoutBracket allMatches={matches} teams={teams} teamMap={teamMap} />
           )}
 
           {/* TOP SCORERS */}
