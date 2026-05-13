@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo, useTransition, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Trophy, Target, Swords, Star, Edit3, Trash2, Plus, X,
-  ChevronUp, Minus, RotateCcw, Zap, Shield, Medal,
+  ChevronUp, Minus, RotateCcw, Zap, Shield, Medal, Download,
 } from 'lucide-react';
+import { toPng } from 'html-to-image';
 import {
   updateMatch, deleteMatch, initializeTournament, resetTournament,
   generateSemiFinals, generateFinals,
@@ -98,6 +99,77 @@ function calcTopScorers(matches: Match[]) {
     .sort((a, b) => b.goals - a.goals);
 }
 
+// ─── download helpers ─────────────────────────────────────────────────────────
+
+async function downloadAsImage(el: HTMLElement, filename: string) {
+  // Temporarily inject !important overrides so backdrop-filter (glass class)
+  // doesn't bleed the live page sidebar into the captured image.
+  const overrideStyle = document.createElement('style');
+  overrideStyle.textContent = `
+    .glass, .glass-light {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    .glass       { background: rgba(15,23,42,0.98) !important; }
+    .glass-light { background: rgba(10,15,28,0.98) !important; }
+    *::-webkit-scrollbar { display: none !important; }
+    * { scrollbar-width: none !important; }
+  `;
+  document.head.appendChild(overrideStyle);
+
+  // Temporarily expand overflow-x-auto so the full table width is captured
+  const scrollEl = el.querySelector<HTMLElement>('.overflow-x-auto');
+  const prevOverflow = scrollEl?.style.overflow ?? '';
+  if (scrollEl) scrollEl.style.overflow = 'visible';
+
+  const fullWidth  = scrollEl ? Math.max(el.offsetWidth, scrollEl.scrollWidth) : el.offsetWidth;
+  const fullHeight = el.scrollHeight;
+
+  try {
+    const dataUrl = await toPng(el, {
+      cacheBust: true,
+      pixelRatio: 2,
+      backgroundColor: '#080d18',
+      width:  fullWidth,
+      height: fullHeight,
+      style: { borderRadius: '16px' },
+      filter: (node) => !(node instanceof HTMLElement && node.dataset.dlIgnore === 'true'),
+    });
+    const link = document.createElement('a');
+    link.download = `${filename}.png`;
+    link.href = dataUrl;
+    link.click();
+  } finally {
+    document.head.removeChild(overrideStyle);
+    if (scrollEl) scrollEl.style.overflow = prevOverflow;
+  }
+}
+
+function DownloadBtn({ elRef, filename, className = '' }: {
+  elRef: React.RefObject<HTMLDivElement | null>;
+  filename: string;
+  className?: string;
+}) {
+  const [loading, setLoading] = useState(false);
+  async function handle() {
+    if (!elRef.current || loading) return;
+    setLoading(true);
+    try { await downloadAsImage(elRef.current, filename); }
+    finally { setLoading(false); }
+  }
+  return (
+    <button
+      onClick={handle}
+      disabled={loading}
+      data-dl-ignore="true"
+      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-500 hover:text-white border border-white/5 hover:border-white/10 transition-all text-[9px] font-black uppercase tracking-widest disabled:opacity-40 ${className}`}
+    >
+      <Download className={`w-3 h-3 ${loading ? 'animate-bounce' : ''}`} />
+      {loading ? 'Saving…' : 'Save'}
+    </button>
+  );
+}
+
 // ─── sub-components ───────────────────────────────────────────────────────────
 
 function TeamLogo({ logo, name, size = 'sm' }: { logo: string; name: string; size?: 'sm' | 'md' }) {
@@ -116,12 +188,14 @@ function StandingsTable({ stage, label, matches, teams, teamMap, highlight }: {
   ).map(t => t._id);
 
   const rows = calcStandings(teamIds, teamMap, matches, stage);
+  const dlRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="glass rounded-2xl sm:rounded-3xl border border-white/5 overflow-hidden">
+    <div ref={dlRef} className="glass rounded-2xl sm:rounded-3xl border border-white/5 overflow-hidden">
       <div className="px-4 sm:px-6 py-4 border-b border-white/5 flex items-center gap-3">
         <div className={`w-2 h-2 rounded-full ${stage === 'GROUP_A' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-        <h3 className="text-sm font-black uppercase tracking-widest">{label}</h3>
+        <h3 className="text-sm font-black uppercase tracking-widest flex-1">{label}</h3>
+        <DownloadBtn elRef={dlRef} filename={`standings-${label.toLowerCase().replace(/\s+/g, '-')}`} />
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[420px]">
@@ -200,13 +274,23 @@ function MatchCard({ match, isAdmin, onEdit, onDelete }: {
   onEdit: (m: Match) => void; onDelete: (m: Match) => void;
 }) {
   const done = match.status === 'completed';
+  const dlRef = useRef<HTMLDivElement>(null);
+  const filename = `match-${match.homeTeamName}-vs-${match.awayTeamName}`
+    .toLowerCase().replace(/\s+/g, '-');
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className="glass rounded-2xl border border-white/5 hover:border-white/10 transition-all overflow-hidden"
     >
-      <div className="p-4 sm:p-5">
+      <div ref={dlRef} className="p-4 sm:p-5">
+        {/* CSL 7 league header */}
+        <div className="flex items-center justify-center gap-2 pb-3 mb-3 border-b border-white/5">
+          <img src="/images/logo.webp" alt="CSL 7" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
+          <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">CSL 7</span>
+        </div>
+
         {/* Teams row */}
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
           {/* Home */}
@@ -250,51 +334,74 @@ function MatchCard({ match, isAdmin, onEdit, onDelete }: {
           </div>
         </div>
 
-        {/* Goal scorers */}
-        {done && match.goalScorers.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-white/5 space-y-1.5">
-            {(['home', 'away'] as const).map(side => {
-              const teamId   = side === 'home' ? match.homeTeam : match.awayTeam;
-              const teamName = side === 'home' ? match.homeTeamName : match.awayTeamName;
-              const logo     = side === 'home' ? match.homeTeamLogo : match.awayTeamLogo;
-              const list     = match.goalScorers.filter(s => s.teamId === teamId);
-              if (!list.length) return null;
-              return (
-                <div key={side} className="flex flex-wrap gap-1 items-center">
-                  {logo
-                    ? <img src={logo} alt={teamName} className="w-4 h-4 object-contain shrink-0" />
-                    : <Target className="w-3 h-3 text-amber-500 shrink-0" />}
+        {/* Goal scorers — column-wise: team logo on top, players below */}
+        {done && match.goalScorers.length > 0 && (() => {
+          const homeSide = match.goalScorers.filter(s => s.teamId === match.homeTeam);
+          const awaySide = match.goalScorers.filter(s => s.teamId === match.awayTeam);
+          return (
+            <div className="mt-3 pt-3 border-t border-white/5 grid grid-cols-2 gap-2">
+              {[homeSide, awaySide].map((list, idx) => (
+                <div key={idx} className="flex flex-col items-center gap-1.5">
                   {list.map((s, i) => (
-                    <span key={i} className="flex items-center gap-1 text-[8px] font-black bg-white/5 px-2 py-1 rounded-full text-slate-300">
-                      ⚽ {s.playerName}
-                      {s.goals > 1 && <span className="text-amber-400 ml-0.5">×{s.goals}</span>}
-                    </span>
+                    <div key={i} className="flex items-center gap-1 text-[8px] font-black text-slate-300 text-center">
+                      <span>⚽</span>
+                      <span>{s.playerName}</span>
+                      {s.goals > 1 && <span className="text-amber-400">×{s.goals}</span>}
+                    </div>
                   ))}
                 </div>
-              );
-            })}
-          </div>
-        )}
+              ))}
+            </div>
+          );
+        })()}
       </div>
 
-      {/* Admin actions */}
-      {isAdmin && (
-        <div className="px-4 sm:px-5 pb-4 flex gap-2">
-          <button
-            onClick={() => onEdit(match)}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/5 hover:bg-amber-500/10 text-slate-400 hover:text-amber-400 text-[10px] font-black uppercase tracking-widest transition-all border border-white/5 hover:border-amber-500/20"
-          >
-            <Edit3 className="w-3 h-3" /> Update Score
-          </button>
-          <button
-            onClick={() => onDelete(match)}
-            className="p-2 rounded-xl bg-white/5 hover:bg-rose-500/10 text-slate-500 hover:text-rose-400 transition-all border border-white/5 hover:border-rose-500/20"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
+      {/* Footer: download always visible, admin actions when applicable */}
+      <div className="px-4 sm:px-5 pb-4 flex gap-2">
+        <DownloadBtn elRef={dlRef} filename={filename} className="shrink-0" />
+        {isAdmin && (
+          <>
+            <button
+              onClick={() => onEdit(match)}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/5 hover:bg-amber-500/10 text-slate-400 hover:text-amber-400 text-[10px] font-black uppercase tracking-widest transition-all border border-white/5 hover:border-amber-500/20"
+            >
+              <Edit3 className="w-3 h-3" /> Update Score
+            </button>
+            <button
+              onClick={() => onDelete(match)}
+              className="p-2 rounded-xl bg-white/5 hover:bg-rose-500/10 text-slate-500 hover:text-rose-400 transition-all border border-white/5 hover:border-rose-500/20"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </>
+        )}
+      </div>
     </motion.div>
+  );
+}
+
+function FixtureSection({ label, fileKey, matches, isAdmin, onEdit, onDelete }: {
+  label: string; fileKey: string; matches: Match[]; isAdmin: boolean;
+  onEdit: (m: Match) => void; onDelete: (m: Match) => void;
+}) {
+  const dlRef = useRef<HTMLDivElement>(null);
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-4">
+        <div className="h-px flex-1 bg-white/5" />
+        <span className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">{label}</span>
+        <div className="h-px flex-1 bg-white/5" />
+        <DownloadBtn elRef={dlRef} filename={`fixtures-${fileKey.toLowerCase()}`} />
+      </div>
+      <div ref={dlRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 p-1">
+        {matches.map(m => (
+          <MatchCard
+            key={m._id} match={m} isAdmin={isAdmin}
+            onEdit={onEdit} onDelete={onDelete}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -626,6 +733,8 @@ export default function TournamentView({ matches, teams, isAdmin }: Props) {
     return map;
   }, [teams]);
 
+  const scorersDlRef = useRef<HTMLDivElement>(null);
+
   function showToast(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(''), 3000);
@@ -821,22 +930,15 @@ export default function TournamentView({ matches, teams, isAdmin }: Props) {
                 { key: 'GROUP_B',     label: 'Group B Fixtures',  ms: groupBMatches },
                 { key: 'KNOCKOUT',    label: 'Knockout Stage',     ms: knockoutMatches },
               ].filter(s => s.ms.length > 0).map(section => (
-                <div key={section.key}>
-                  <h3 className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 mb-4 flex items-center gap-2">
-                    <div className="h-px flex-1 bg-white/5" />
-                    {section.label}
-                    <div className="h-px flex-1 bg-white/5" />
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                    {section.ms.map(m => (
-                      <MatchCard
-                        key={m._id} match={m} isAdmin={isAdmin}
-                        onEdit={setEditMatch}
-                        onDelete={m => withConfirm('Delete Match', `Delete ${m.homeTeamName} vs ${m.awayTeamName}?`, () => handleDeleteMatch(m))}
-                      />
-                    ))}
-                  </div>
-                </div>
+                <FixtureSection
+                  key={section.key}
+                  label={section.label}
+                  fileKey={section.key}
+                  matches={section.ms}
+                  isAdmin={isAdmin}
+                  onEdit={setEditMatch}
+                  onDelete={m => withConfirm('Delete Match', `Delete ${m.homeTeamName} vs ${m.awayTeamName}?`, () => handleDeleteMatch(m))}
+                />
               ))}
             </div>
           )}
@@ -848,10 +950,11 @@ export default function TournamentView({ matches, teams, isAdmin }: Props) {
 
           {/* TOP SCORERS */}
           {tab === 'scorers' && (
-            <div className="glass rounded-2xl sm:rounded-3xl border border-white/5 overflow-hidden">
+            <div ref={scorersDlRef} className="glass rounded-2xl sm:rounded-3xl border border-white/5 overflow-hidden">
               <div className="px-4 sm:px-6 py-4 border-b border-white/5 flex items-center gap-3">
                 <Target className="w-4 h-4 text-amber-500" />
-                <h3 className="text-sm font-black uppercase tracking-widest">Top Goal Scorers</h3>
+                <h3 className="text-sm font-black uppercase tracking-widest flex-1">Top Goal Scorers</h3>
+                <DownloadBtn elRef={scorersDlRef} filename="top-scorers" />
               </div>
               {topScorers.length === 0 ? (
                 <div className="py-16 flex flex-col items-center text-center">
