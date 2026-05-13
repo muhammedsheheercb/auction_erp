@@ -39,7 +39,7 @@ interface Match {
   goalScorers: GoalScorer[];
 }
 
-interface Player { _id: string; name: string; number: number; }
+interface Player { _id: string; name: string; number: number; photo?: string; }
 interface Team { _id: string; name: string; logo: string; players: Player[]; }
 
 interface Props {
@@ -86,10 +86,10 @@ function calcStandings(teamIds: string[], teamMap: Map<string, Team>, matches: M
 }
 
 function calcTopScorers(matches: Match[]) {
-  const map = new Map<string, { playerName: string; teamName: string; goals: number }>();
+  const map = new Map<string, { playerName: string; teamName: string; teamId: string; goals: number }>();
   matches.forEach(m =>
     m.goalScorers.forEach(s => {
-      const prev = map.get(s.playerId) ?? { playerName: s.playerName, teamName: s.teamName, goals: 0 };
+      const prev = map.get(s.playerId) ?? { playerName: s.playerName, teamName: s.teamName, teamId: s.teamId, goals: 0 };
       map.set(s.playerId, { ...prev, goals: prev.goals + s.goals });
     })
   );
@@ -252,14 +252,27 @@ function MatchCard({ match, isAdmin, onEdit, onDelete }: {
 
         {/* Goal scorers */}
         {done && match.goalScorers.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-white/5 flex flex-wrap gap-1.5 justify-center">
-            {match.goalScorers.map((s, i) => (
-              <span key={i} className="flex items-center gap-1 text-[8px] font-black bg-white/5 px-2 py-1 rounded-full text-slate-400">
-                <Target className="w-2.5 h-2.5 text-amber-500" />
-                {s.playerName} {s.goals > 1 ? `×${s.goals}` : ''}
-                <span className="text-slate-600">· {s.teamName.split(' ')[0]}</span>
-              </span>
-            ))}
+          <div className="mt-3 pt-3 border-t border-white/5 space-y-1.5">
+            {(['home', 'away'] as const).map(side => {
+              const teamId   = side === 'home' ? match.homeTeam : match.awayTeam;
+              const teamName = side === 'home' ? match.homeTeamName : match.awayTeamName;
+              const logo     = side === 'home' ? match.homeTeamLogo : match.awayTeamLogo;
+              const list     = match.goalScorers.filter(s => s.teamId === teamId);
+              if (!list.length) return null;
+              return (
+                <div key={side} className="flex flex-wrap gap-1 items-center">
+                  {logo
+                    ? <img src={logo} alt={teamName} className="w-4 h-4 object-contain shrink-0" />
+                    : <Target className="w-3 h-3 text-amber-500 shrink-0" />}
+                  {list.map((s, i) => (
+                    <span key={i} className="flex items-center gap-1 text-[8px] font-black bg-white/5 px-2 py-1 rounded-full text-slate-300">
+                      ⚽ {s.playerName}
+                      {s.goals > 1 && <span className="text-amber-400 ml-0.5">×{s.goals}</span>}
+                    </span>
+                  ))}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -379,8 +392,14 @@ function ScoreModal({ match, teams, onClose, onSave }: {
   const awayTeam = teams.find(t => t._id === match.awayTeam);
   const activePlayers = (newSide === 'home' ? homeTeam : awayTeam)?.players ?? [];
 
+  const homeAssigned = scorers.filter(s => s.teamId === match.homeTeam).reduce((sum, s) => sum + s.goals, 0);
+  const awayAssigned = scorers.filter(s => s.teamId === match.awayTeam).reduce((sum, s) => sum + s.goals, 0);
+  const activeAssigned = newSide === 'home' ? homeAssigned : awayAssigned;
+  const activeScore   = newSide === 'home' ? homeScore : awayScore;
+  const remaining     = activeScore - activeAssigned;
+
   function addScorer() {
-    if (!newPid) return;
+    if (!newPid || newGoals > remaining) return;
     const player = activePlayers.find(p => p._id === newPid);
     if (!player) return;
     const team = newSide === 'home' ? homeTeam! : awayTeam!;
@@ -468,22 +487,27 @@ function ScoreModal({ match, teams, onClose, onSave }: {
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3">Goal Scorers</p>
               {scorers.length > 0 ? (
                 <div className="space-y-2 mb-3">
-                  {scorers.map((s, i) => (
-                    <div key={i} className="flex items-center justify-between bg-white/3 rounded-xl px-3 py-2.5 border border-white/5">
-                      <div className="flex items-center gap-2">
-                        <Target className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                        <span className="text-xs font-black text-white">{s.playerName}</span>
-                        {s.goals > 1 && (
-                          <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded font-black">×{s.goals}</span>
-                        )}
-                        <span className="text-[9px] text-slate-500 font-bold truncate max-w-[70px]">· {s.teamName}</span>
+                  {scorers.map((s, i) => {
+                    const isHome = s.teamId === match.homeTeam;
+                    const logo   = isHome ? match.homeTeamLogo : match.awayTeamLogo;
+                    return (
+                      <div key={i} className="flex items-center justify-between bg-white/3 rounded-xl px-3 py-2.5 border border-white/5">
+                        <div className="flex items-center gap-2">
+                          {logo
+                            ? <img src={logo} alt={s.teamName} className="w-4 h-4 object-contain shrink-0" />
+                            : <Target className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
+                          <span className="text-xs font-black text-white">{s.playerName}</span>
+                          {s.goals > 1 && (
+                            <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded font-black">×{s.goals}</span>
+                          )}
+                        </div>
+                        <button onClick={() => setScorers(prev => prev.filter((_, j) => j !== i))}
+                          className="p-1 rounded-lg hover:bg-rose-500/10 text-slate-600 hover:text-rose-400 transition-all">
+                          <X className="w-3 h-3" />
+                        </button>
                       </div>
-                      <button onClick={() => setScorers(prev => prev.filter((_, j) => j !== i))}
-                        className="p-1 rounded-lg hover:bg-rose-500/10 text-slate-600 hover:text-rose-400 transition-all">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-[10px] text-slate-600 font-black uppercase tracking-widest mb-3">No scorers added yet</p>
@@ -493,46 +517,67 @@ function ScoreModal({ match, teams, onClose, onSave }: {
               <div className="bg-white/3 rounded-xl p-3 border border-white/5 space-y-3">
                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Add Scorer</p>
 
-                {/* Team toggle */}
+                {/* Team toggle with goal progress */}
                 <div className="flex gap-2">
-                  {(['home', 'away'] as const).map(side => (
-                    <button key={side} onClick={() => { setNewSide(side); setNewPid(''); }}
-                      className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
-                        newSide === side ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-white/5 text-slate-500 border border-white/5'
-                      }`}>
-                      {side === 'home' ? match.homeTeamName.split(' ')[0] : match.awayTeamName.split(' ')[0]}
-                    </button>
-                  ))}
+                  {(['home', 'away'] as const).map(side => {
+                    const logo      = side === 'home' ? match.homeTeamLogo : match.awayTeamLogo;
+                    const name      = side === 'home' ? match.homeTeamName : match.awayTeamName;
+                    const score     = side === 'home' ? homeScore : awayScore;
+                    const assigned  = side === 'home' ? homeAssigned : awayAssigned;
+                    const full      = assigned >= score;
+                    return (
+                      <button key={side} onClick={() => { setNewSide(side); setNewPid(''); setNewGoals(1); }}
+                        className={`flex-1 flex flex-col items-center gap-1 py-2 px-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
+                          newSide === side ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-white/5 text-slate-500 border border-white/5'
+                        }`}>
+                        <div className="flex items-center gap-1.5">
+                          {logo && <img src={logo} alt={name} className="w-4 h-4 object-contain" />}
+                          <span className="truncate max-w-15">{name.split(' ')[0]}</span>
+                        </div>
+                        <span className={`text-[8px] font-black ${full ? 'text-emerald-400' : 'text-slate-600'}`}>
+                          {assigned}/{score} ⚽
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
 
-                {/* Player select */}
-                <select
-                  value={newPid}
-                  onChange={e => setNewPid(e.target.value)}
-                  className="w-full input-base text-sm py-2.5"
-                >
-                  <option value="">Select player…</option>
-                  {activePlayers.map(p => (
-                    <option key={p._id} value={p._id}>#{p.number} {p.name}</option>
-                  ))}
-                </select>
+                {remaining <= 0 ? (
+                  <p className="text-[9px] text-emerald-500 font-black uppercase tracking-widest text-center py-1">
+                    All {newSide === 'home' ? homeScore : awayScore} goal{(newSide === 'home' ? homeScore : awayScore) !== 1 ? 's' : ''} assigned ✓
+                  </p>
+                ) : (
+                  <>
+                    {/* Player select */}
+                    <select
+                      value={newPid}
+                      onChange={e => setNewPid(e.target.value)}
+                      className="w-full input-base text-sm py-2.5"
+                    >
+                      <option value="">Select player… ({remaining} goal{remaining !== 1 ? 's' : ''} left)</option>
+                      {activePlayers.map(p => (
+                        <option key={p._id} value={p._id}>#{p.number} {p.name}</option>
+                      ))}
+                    </select>
 
-                {/* Goals + add button */}
-                <div className="flex gap-2">
-                  <div className="flex items-center gap-2 bg-white/5 rounded-xl px-3 py-2 border border-white/5">
-                    <button onClick={() => setNewGoals(Math.max(1, newGoals - 1))} className="text-slate-400 hover:text-white transition-colors">
-                      <Minus className="w-3.5 h-3.5" />
-                    </button>
-                    <span className="text-sm font-black w-5 text-center tabular-nums">{newGoals}</span>
-                    <button onClick={() => setNewGoals(newGoals + 1)} className="text-slate-400 hover:text-white transition-colors">
-                      <Plus className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <button onClick={addScorer} disabled={!newPid}
-                    className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-wider transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-emerald-500/20">
-                    <Plus className="w-3.5 h-3.5" /> Add
-                  </button>
-                </div>
+                    {/* Goals + add button */}
+                    <div className="flex gap-2">
+                      <div className="flex items-center gap-2 bg-white/5 rounded-xl px-3 py-2 border border-white/5">
+                        <button onClick={() => setNewGoals(Math.max(1, newGoals - 1))} className="text-slate-400 hover:text-white transition-colors">
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="text-sm font-black w-5 text-center tabular-nums">{newGoals}</span>
+                        <button onClick={() => setNewGoals(Math.min(remaining, newGoals + 1))} className="text-slate-400 hover:text-white transition-colors">
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <button onClick={addScorer} disabled={!newPid || newGoals > remaining}
+                        className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-wider transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-emerald-500/20">
+                        <Plus className="w-3.5 h-3.5" /> Add
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -574,6 +619,12 @@ export default function TournamentView({ matches, teams, isAdmin }: Props) {
   const knockoutMatches = matches.filter(m => ['SEMI_1', 'SEMI_2', 'LOSERS_FINAL', 'FINAL'].includes(m.stage));
 
   const topScorers = useMemo(() => calcTopScorers(matches), [matches]);
+
+  const playerPhotoMap = useMemo(() => {
+    const map = new Map<string, string>();
+    teams.forEach(t => t.players.forEach(p => { if (p.photo) map.set(p._id, p.photo); }));
+    return map;
+  }, [teams]);
 
   function showToast(msg: string) {
     setToast(msg);
@@ -644,7 +695,7 @@ export default function TournamentView({ matches, teams, isAdmin }: Props) {
       <AnimatePresence>
         {toast && (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-            className="fixed top-20 left-1/2 -translate-x-1/2 z-[500] bg-emerald-500 text-black text-xs font-black uppercase tracking-widest px-5 py-3 rounded-full shadow-2xl">
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-500 bg-emerald-500 text-black text-xs font-black uppercase tracking-widest px-5 py-3 rounded-full shadow-2xl">
             {toast}
           </motion.div>
         )}
@@ -809,30 +860,54 @@ export default function TournamentView({ matches, teams, isAdmin }: Props) {
                 </div>
               ) : (
                 <div className="divide-y divide-white/5">
-                  {topScorers.map((s, i) => (
-                    <motion.div
-                      key={s.playerId}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.04 }}
-                      className="flex items-center gap-4 px-4 sm:px-6 py-3 sm:py-4 hover:bg-white/3 transition-colors"
-                    >
-                      <div className="w-8 text-center shrink-0">
-                        {i === 0 ? <Medal className="w-5 h-5 text-amber-400 mx-auto" />
-                          : i === 1 ? <Medal className="w-5 h-5 text-slate-400 mx-auto" />
-                          : i === 2 ? <Medal className="w-5 h-5 text-amber-700 mx-auto" />
-                          : <span className="text-xs font-black text-slate-600">{i + 1}</span>}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs sm:text-sm font-black uppercase tracking-tight truncate">{s.playerName}</p>
-                        <p className="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5 truncate">{s.teamName}</p>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <Target className="w-3.5 h-3.5 text-amber-500" />
-                        <span className="text-lg sm:text-xl font-black tabular-nums text-white">{s.goals}</span>
-                      </div>
-                    </motion.div>
-                  ))}
+                  {topScorers.map((s, i) => {
+                    const photo   = playerPhotoMap.get(s.playerId);
+                    const team    = teamMap.get(s.teamId);
+                    const teamLogo = team?.logo;
+                    return (
+                      <motion.div
+                        key={s.playerId}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.04 }}
+                        className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 hover:bg-white/3 transition-colors"
+                      >
+                        {/* Rank */}
+                        <div className="w-7 text-center shrink-0">
+                          {i === 0 ? <Medal className="w-5 h-5 text-amber-400 mx-auto" />
+                            : i === 1 ? <Medal className="w-5 h-5 text-slate-400 mx-auto" />
+                            : i === 2 ? <Medal className="w-5 h-5 text-amber-700 mx-auto" />
+                            : <span className="text-xs font-black text-slate-600">{i + 1}</span>}
+                        </div>
+
+                        {/* Player photo */}
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-white/10 shrink-0 bg-white/5">
+                          {photo
+                            ? <img src={photo} alt={s.playerName} className="w-full h-full object-cover" />
+                            : <div className="w-full h-full flex items-center justify-center text-slate-600 text-xs font-black uppercase">
+                                {s.playerName.charAt(0)}
+                              </div>}
+                        </div>
+
+                        {/* Name + team */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs sm:text-sm font-black uppercase tracking-tight truncate">{s.playerName}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            {teamLogo
+                              ? <img src={teamLogo} alt={s.teamName} className="w-3.5 h-3.5 object-contain shrink-0" />
+                              : <Trophy className="w-3 h-3 text-slate-600 shrink-0" />}
+                            <p className="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-widest truncate">{s.teamName}</p>
+                          </div>
+                        </div>
+
+                        {/* Goal count */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="text-base sm:text-lg">⚽</span>
+                          <span className="text-lg sm:text-xl font-black tabular-nums text-white">{s.goals}</span>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               )}
             </div>
