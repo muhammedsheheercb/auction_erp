@@ -285,70 +285,73 @@ function MatchCard({ match, isAdmin, onEdit, onDelete }: {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass rounded-2xl border border-white/5 hover:border-white/10 transition-all overflow-hidden"
+      className="glass rounded-2xl border border-white/5 hover:border-white/10 transition-all overflow-hidden flex flex-col h-full"
     >
-      <div ref={dlRef} className="p-4 sm:p-5">
-        {/* CSL 7 league header */}
-        <div className="flex items-center justify-center gap-2 pb-3 mb-3 border-b border-white/5">
-          <img src="/images/logo.webp" alt="CSL 7" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
-          <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">CSL 7</span>
+      {/* Capturable content — grows to fill equal card height */}
+      <div ref={dlRef} className="p-3 sm:p-4 flex-1 flex flex-col">
+        {/* CSL 7 header */}
+        <div className="flex items-center justify-center gap-1.5 pb-2.5 mb-2.5 border-b border-white/5 shrink-0">
+          <img src="/images/logo.webp" alt="CSL 7" className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />
+          <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">CSL 7</span>
         </div>
 
-        {/* Teams row */}
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
+        {/* Teams row — flex-1 so it fills remaining space evenly across cards */}
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1.5 sm:gap-3 flex-1">
           {/* Home */}
-          <div className="flex flex-col items-center gap-1.5 text-center">
-            <div className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center">
-              <TeamLogo logo={match.homeTeamLogo} name={match.homeTeamName} />
+          <div className="flex flex-col items-center gap-1 text-center min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center shrink-0">
+              {match.homeTeamLogo
+                ? <img src={match.homeTeamLogo} alt={match.homeTeamName} className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
+                : <Trophy className="w-6 h-6 text-slate-600" />}
             </div>
-            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-tight leading-tight max-w-[70px] sm:max-w-[90px]">
+            <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-tight leading-tight line-clamp-2 w-full">
               {match.homeTeamName}
             </span>
           </div>
 
           {/* Score */}
-          <div className="flex flex-col items-center gap-1 min-w-[60px] sm:min-w-[80px]">
+          <div className="flex flex-col items-center gap-1 shrink-0 w-12 sm:w-16">
             {done ? (
-              <div className="flex items-center gap-2 sm:gap-3">
-                <span className={`text-2xl sm:text-3xl font-black tabular-nums ${match.homeScore > match.awayScore ? 'text-white' : 'text-slate-500'}`}>{match.homeScore}</span>
-                <span className="text-slate-600 font-black text-lg">–</span>
-                <span className={`text-2xl sm:text-3xl font-black tabular-nums ${match.awayScore > match.homeScore ? 'text-white' : 'text-slate-500'}`}>{match.awayScore}</span>
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <span className={`text-xl sm:text-2xl font-black tabular-nums leading-none ${match.homeScore > match.awayScore ? 'text-white' : 'text-slate-500'}`}>{match.homeScore}</span>
+                <span className="text-slate-600 font-black text-sm leading-none">–</span>
+                <span className={`text-xl sm:text-2xl font-black tabular-nums leading-none ${match.awayScore > match.homeScore ? 'text-white' : 'text-slate-500'}`}>{match.awayScore}</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5">
-                <span className="text-slate-700 font-black text-base sm:text-lg">VS</span>
-              </div>
+              <span className="text-slate-700 font-black text-sm sm:text-base leading-none">VS</span>
             )}
-            <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
+            <span className={`text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full whitespace-nowrap ${
               done ? 'bg-emerald-500/10 text-emerald-400' : 'bg-white/5 text-slate-600'
             }`}>
-              {done ? 'FT' : 'Upcoming'}
+              {done ? 'FT' : 'Soon'}
             </span>
           </div>
 
           {/* Away */}
-          <div className="flex flex-col items-center gap-1.5 text-center">
-            <div className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center">
-              <TeamLogo logo={match.awayTeamLogo} name={match.awayTeamName} />
+          <div className="flex flex-col items-center gap-1 text-center min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center shrink-0">
+              {match.awayTeamLogo
+                ? <img src={match.awayTeamLogo} alt={match.awayTeamName} className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
+                : <Trophy className="w-6 h-6 text-slate-600" />}
             </div>
-            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-tight leading-tight max-w-[70px] sm:max-w-[90px]">
+            <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-tight leading-tight line-clamp-2 w-full">
               {match.awayTeamName}
             </span>
           </div>
         </div>
 
-        {/* Goal scorers — column-wise: team logo on top, players below */}
+        {/* Goal scorers */}
         {done && match.goalScorers.length > 0 && (() => {
           const homeSide = match.goalScorers.filter(s => s.teamId === match.homeTeam);
           const awaySide = match.goalScorers.filter(s => s.teamId === match.awayTeam);
           return (
-            <div className="mt-3 pt-3 border-t border-white/5 grid grid-cols-2 gap-2">
+            <div className="mt-2.5 pt-2.5 border-t border-white/5 grid grid-cols-2 gap-1 shrink-0">
               {[homeSide, awaySide].map((list, idx) => (
-                <div key={idx} className="flex flex-col items-center gap-1.5">
+                <div key={idx} className="flex flex-col items-center gap-1">
                   {list.map((s, i) => (
-                    <div key={i} className="flex items-center gap-1 text-[8px] font-black text-slate-300 text-center">
+                    <div key={i} className="flex items-center gap-0.5 text-[7px] sm:text-[8px] font-black text-slate-300 text-center flex-wrap justify-center">
                       <span>⚽</span>
-                      <span>{s.playerName}</span>
+                      <span className="break-all">{s.playerName}</span>
                       {s.goals > 1 && <span className="text-amber-400">×{s.goals}</span>}
                     </div>
                   ))}
@@ -359,22 +362,22 @@ function MatchCard({ match, isAdmin, onEdit, onDelete }: {
         })()}
       </div>
 
-      {/* Footer: download always visible, admin actions when applicable */}
-      <div className="px-4 sm:px-5 pb-4 flex gap-2">
+      {/* Footer — always pinned to card bottom */}
+      <div className="px-3 sm:px-4 pb-3 flex gap-1.5 shrink-0 mt-auto">
         <DownloadBtn elRef={dlRef} filename={filename} className="shrink-0" />
         {isAdmin && (
           <>
             <button
               onClick={() => onEdit(match)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/5 hover:bg-amber-500/10 text-slate-400 hover:text-amber-400 text-[10px] font-black uppercase tracking-widest transition-all border border-white/5 hover:border-amber-500/20"
+              className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl bg-white/5 hover:bg-amber-500/10 text-slate-400 hover:text-amber-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all border border-white/5 hover:border-amber-500/20 min-h-[36px]"
             >
-              <Edit3 className="w-3 h-3" /> Update Score
+              <Edit3 className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" /> Update
             </button>
             <button
               onClick={() => onDelete(match)}
-              className="p-2 rounded-xl bg-white/5 hover:bg-rose-500/10 text-slate-500 hover:text-rose-400 transition-all border border-white/5 hover:border-rose-500/20"
+              className="p-2 rounded-xl bg-white/5 hover:bg-rose-500/10 text-slate-500 hover:text-rose-400 transition-all border border-white/5 hover:border-rose-500/20 min-h-[36px] min-w-[36px] flex items-center justify-center"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             </button>
           </>
         )}
@@ -383,11 +386,14 @@ function MatchCard({ match, isAdmin, onEdit, onDelete }: {
   );
 }
 
-function FixtureSection({ label, fileKey, matches, isAdmin, onEdit, onDelete }: {
+function FixtureSection({ label, fileKey, matches, isAdmin, onEdit, onDelete, cols }: {
   label: string; fileKey: string; matches: Match[]; isAdmin: boolean;
-  onEdit: (m: Match) => void; onDelete: (m: Match) => void;
+  onEdit: (m: Match) => void; onDelete: (m: Match) => void; cols?: 2;
 }) {
   const dlRef = useRef<HTMLDivElement>(null);
+  const gridCls = cols === 2
+    ? 'grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3 p-1 items-stretch'
+    : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 p-1 items-stretch';
   return (
     <div>
       <div className="flex items-center gap-2 mb-4">
@@ -396,7 +402,7 @@ function FixtureSection({ label, fileKey, matches, isAdmin, onEdit, onDelete }: 
         <div className="h-px flex-1 bg-white/5" />
         <DownloadBtn elRef={dlRef} filename={`fixtures-${fileKey.toLowerCase()}`} />
       </div>
-      <div ref={dlRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 p-1">
+      <div ref={dlRef} className={gridCls}>
         {matches.map(m => (
           <MatchCard
             key={m._id} match={m} isAdmin={isAdmin}
@@ -1066,11 +1072,11 @@ export default function TournamentView({ matches, teams, isAdmin }: Props) {
                     <DayHeader day="1" label="Group Stage" />
                     {gADay1.length > 0 && (
                       <FixtureSection label="Group A" fileKey="GROUP_A_D1" matches={gADay1}
-                        isAdmin={isAdmin} onEdit={setEditMatch} onDelete={onDel} />
+                        isAdmin={isAdmin} onEdit={setEditMatch} onDelete={onDel} cols={2} />
                     )}
                     {gBDay1.length > 0 && (
                       <FixtureSection label="Group B" fileKey="GROUP_B_D1" matches={gBDay1}
-                        isAdmin={isAdmin} onEdit={setEditMatch} onDelete={onDel} />
+                        isAdmin={isAdmin} onEdit={setEditMatch} onDelete={onDel} cols={2} />
                     )}
                   </div>
                 )}
