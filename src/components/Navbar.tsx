@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, Home, Users, Trophy, Play, LayoutGrid, Swords } from 'lucide-react';
+import { Menu, X, Home, Users, Trophy, Play, LayoutGrid, Swords, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useCallback, useRef } from 'react';
 
@@ -52,6 +52,7 @@ export default function Navbar({ isAdmin }: { isAdmin: boolean }) {
     { name: 'Teams', href: '/teams', icon: Trophy },
     { name: 'Squads', href: '/squad', icon: LayoutGrid },
     { name: 'Tournament', href: '/tournament', icon: Swords },
+    { name: 'Gallery', href: '/gallery', icon: Star },
   ];
 
   return (
